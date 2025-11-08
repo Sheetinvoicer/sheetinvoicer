@@ -34,7 +34,7 @@ export default function Home() {
             <h3 className="font-semibold text-lg mb-2">Map Fields</h3>
             <p className="text-gray-600">Connect your columns to invoice fields</p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-md">
+          <div className="bg-white rounded-lg p-6 shadow-md"> 
             <div className="text-purple-600 text-2xl mb-3">✉️</div>
             <h3 className="font-semibold text-lg mb-2">Send & Relax</h3>
             <p className="text-gray-600">Professional PDFs delivered automatically</p>

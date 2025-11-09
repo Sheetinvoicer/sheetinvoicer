@@ -17,13 +17,23 @@ export async function POST(request) {
       );
     }
 
+    // Validate field mapping
+    if (!fieldMapping.clientEmail) {
+      return NextResponse.json(
+        { error: 'Client Email field must be mapped' },
+        { status: 400 }
+      );
+    }
+
     // Group rows by client email for sending
     const invoicesByClient = {};
+    let validEmailsCount = 0;
     
     csvData.forEach(row => {
       const clientEmail = row[fieldMapping.clientEmail];
-      if (!clientEmail) return;
+      if (!clientEmail || !clientEmail.includes('@')) return;
 
+      validEmailsCount++;
       if (!invoicesByClient[clientEmail]) {
         invoicesByClient[clientEmail] = {
           clientName: row[fieldMapping.clientName] || 'Valued Client',
@@ -34,11 +44,22 @@ export async function POST(request) {
 
       invoicesByClient[clientEmail].items.push({
         description: row[fieldMapping.description] || 'Item',
-        quantity: row[fieldMapping.quantity] || 1,
-        unitPrice: row[fieldMapping.unitPrice] || row[fieldMapping.amount] || 0,
-        amount: row[fieldMapping.amount] || 0
+        quantity: parseFloat(row[fieldMapping.quantity]) || 1,
+        unitPrice: parseFloat(row[fieldMapping.unitPrice]) || parseFloat(row[fieldMapping.amount]) || 0,
+        amount: parseFloat(row[fieldMapping.amount]) || 0
       });
     });
+
+    // Check if any valid emails were found
+    if (validEmailsCount === 0) {
+      return NextResponse.json(
+        { error: 'No valid client emails found in the CSV data' },
+        { status: 400 }
+      );
+    }
+
+    let sentCount = 0;
+    let errorCount = 0;
 
     // Generate PDF and send email for each client
     for (const [clientEmail, invoiceData] of Object.entries(invoicesByClient)) {
@@ -61,20 +82,24 @@ export async function POST(request) {
         });
 
         console.log(`Invoice sent to ${clientEmail}`);
+        sentCount++;
       } catch (error) {
         console.error(`Failed to send invoice to ${clientEmail}:`, error);
+        errorCount++;
       }
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Invoices processed for ${Object.keys(invoicesByClient).length} clients` 
+      message: `Invoices processed: ${sentCount} sent successfully, ${errorCount} failed`,
+      sent: sentCount,
+      failed: errorCount
     });
 
   } catch (error) {
     console.error('Error generating invoices:', error);
     return NextResponse.json(
-      { error: 'Failed to generate invoices' },
+      { error: 'Failed to generate invoices: ' + error.message },
       { status: 500 }
     );
   }

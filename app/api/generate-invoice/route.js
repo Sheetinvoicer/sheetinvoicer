@@ -1,53 +1,87 @@
 import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
-  let response;
-  
   try {
-    console.log('=== API START ===');
+    console.log('API called - simplified version');
     
-    // Get the request body as text first to avoid JSON parsing issues
-    const bodyText = await request.text();
-    console.log('Raw body length:', bodyText.length);
-    
-    if (!bodyText) {
-      return NextResponse.json({ error: 'Empty request body' }, { status: 400 });
+    // Parse request
+    const { csvData, fieldMapping, businessInfo } = await request.json();
+
+    // Validate
+    if (!businessInfo?.name) {
+      return NextResponse.json({ error: 'Business name required' }, { status: 400 });
     }
-    
-    // Try to parse JSON
-    let parsedData;
-    try {
-      parsedData = JSON.parse(bodyText);
-    } catch (parseError) {
-      return NextResponse.json({ error: 'Invalid JSON: ' + parseError.message }, { status: 400 });
+
+    if (!fieldMapping?.clientEmail) {
+      return NextResponse.json({ error: 'Client Email mapping required' }, { status: 400 });
     }
-    
-    const { csvData, fieldMapping, businessInfo } = parsedData;
-    console.log('JSON parsed successfully');
-    
-    // Basic validation
-    if (!businessInfo || !businessInfo.name) {
-      return NextResponse.json({ error: 'Business name is required' }, { status: 400 });
-    }
-    
-    console.log('Validation passed');
-    
-    // Success response
-    response = NextResponse.json({ 
-      success: true, 
-      message: 'All steps completed!',
-      business: businessInfo.name,
-      hasData: !!csvData
+
+    // Group by client
+    const invoicesByClient = {};
+    csvData.forEach(row => {
+      const email = row[fieldMapping.clientEmail];
+      if (email) {
+        if (!invoicesByClient[email]) {
+          invoicesByClient[email] = {
+            clientName: row[fieldMapping.clientName] || 'Client',
+            clientEmail: email,
+            items: []
+          };
+        }
+        invoicesByClient[email].items.push({
+          description: row[fieldMapping.description] || 'Item',
+          quantity: row[fieldMapping.quantity] || 1,
+          unitPrice: row[fieldMapping.unitPrice] || 0,
+          amount: row[fieldMapping.amount] || 0
+        });
+      }
     });
-    
+
+    // Send simple emails (no PDF attachments)
+    let sentCount = 0;
+    for (const [email, invoice] of Object.entries(invoicesByClient)) {
+      try {
+        const total = invoice.items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+        
+        await resend.emails.send({
+          from: 'SheetInvoicer <onboarding@resend.dev>',
+          to: [email],
+          subject: `Invoice from ${businessInfo.name}`,
+          html: `
+            <h2>Invoice from ${businessInfo.name}</h2>
+            <p>Hello ${invoice.clientName},</p>
+            <p>Here is your invoice summary:</p>
+            <ul>
+              ${invoice.items.map(item => 
+                `<li>${item.description} - $${(parseFloat(item.amount) || 0).toFixed(2)}</li>`
+              ).join('')}
+            </ul>
+            <p><strong>Total: $${total.toFixed(2)}</strong></p>
+            <p>Thank you for your business!</p>
+          `
+        });
+        
+        sentCount++;
+        console.log(`Email sent to ${email}`);
+      } catch (emailError) {
+        console.error(`Failed to send to ${email}:`, emailError);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Emails sent to ${sentCount} clients`,
+      sent: sentCount
+    });
+
   } catch (error) {
-    console.error('=== FINAL CATCH ERROR ===', error);
-    response = NextResponse.json(
-      { error: 'Critical failure: ' + error.message },
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { error: 'Request failed: ' + error.message },
       { status: 500 }
     );
   }
-  
-  console.log('=== API END ===');
-  return response;
 }

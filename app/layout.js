@@ -1,14 +1,20 @@
-import "./globals.css";
-import { ThemeProvider } from '@/components/ThemeProvider'
+import { Suspense } from 'react'
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: `
+          body { margin: 0; font-family: system-ui; background: #f9fafb; }
+          .dashboard-container { display: flex; min-height: 100vh; }
+          .main-content { flex: 1; padding: 1.5rem; }
+        ` }} />
+      </head>
       <body>
-        <ThemeProvider>
+        <Suspense fallback={<div>Loading...</div>}>
           {children}
-        </ThemeProvider>
+        </Suspense>
       </body>
     </html>
-  );
+  )
 }

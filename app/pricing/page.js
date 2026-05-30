@@ -158,16 +158,39 @@ export default function PricingPage() {
                     ))}
                   </ul>
                   
-                  <Link
-                    href={plan.price === 0 ? '/signup' : 'handleSubscribe'}
-                    className={`mt-8 w-full block text-center py-3 rounded-xl font-semibold transition-all ${
+                  <button
+                    onClick={() => {
+                      if (plan.name === 'Free') {
+                        window.location.href = '/signup'
+                      } else {
+                        // Call subscription API
+                        fetch('/api/stripe/create-subscription', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            priceId: plan.name === 'Pro' 
+                              ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID 
+                              : process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID,
+                            successUrl: window.location.origin + '/dashboard/subscription/success',
+                            cancelUrl: window.location.origin + '/pricing'
+                          })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.url) window.location.href = data.url
+                          else alert('Error: ' + data.error)
+                        })
+                        .catch(err => alert('Error: ' + err.message))
+                      }
+                    }}
+                    className={`mt-8 w-full text-center py-3 rounded-xl font-semibold transition-all ${
                       plan.price === 0
                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300'
                         : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-xl'
                     }`}
                   >
-                    {plan.price === 0 ? 'Get Started Free' : 'Upgrade to ' + plan.name}
-                  </Link>
+                    {plan.price === 0 ? 'Get Started Free' : 'Subscribe Now'}
+                  </button>
                 </div>
               </div>
             )

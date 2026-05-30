@@ -171,7 +171,7 @@ export default function PricingPage() {
                             priceId: plan.name === 'Pro' 
                               ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID 
                               : process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID,
-                            successUrl: window.location.origin + '/dashboard/subscription/success',
+                            successUrl: window.location.origin + '/dashboard'
                             cancelUrl: window.location.origin + '/pricing'
                           })
                         })

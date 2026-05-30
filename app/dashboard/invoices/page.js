@@ -126,7 +126,7 @@ export default function InvoicesPage() {
       ) : filteredInvoices.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-12 text-center border border-gray-100 dark:border-gray-700">
           <span className="text-6xl mb-4 block">📄</span>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No invoices yet</h3>
+    <EmptyState />
           <p className="text-gray-500 dark:text-gray-400 mb-4">Create your first invoice by uploading a CSV</p>
           <Link
             href="/dashboard/invoices/new"

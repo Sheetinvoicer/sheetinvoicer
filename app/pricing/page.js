@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, Zap, Rocket, Sparkles, TrendingUp, CreditCard, Users, FileText, Download, Repeat, Mail, Shield, BarChart, Upload } from 'lucide-react'
+import { Check, X, Zap, Rocket, Sparkles, TrendingUp, CreditCard, Users, FileText, Download, Repeat, Mail, Shield, BarChart, UploadCloud } from 'lucide-react'
 
 export default function PricingPage() {
   const [billing, setBilling] = useState('monthly')
@@ -106,7 +106,7 @@ export default function PricingPage() {
 
   const allFeatures = [
     { name: 'Invoices per month', icon: FileText, key: 'invoices' },
-    { name: 'CSV Bulk Import', icon: Upload, key: 'csv' },
+  { name: 'CSV Bulk Import', icon: UploadCloud, key: 'csv' },
     { name: 'Multi-PDF Download', icon: Download, key: 'multipdf' },
     { name: 'Recurring Invoices', icon: Repeat, key: 'recurring' },
     { name: 'Stripe Payments', icon: CreditCard, key: 'stripe' },

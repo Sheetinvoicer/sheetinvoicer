@@ -6,15 +6,16 @@ import { useRouter } from 'next/navigation'
 import toast, { Toaster } from 'react-hot-toast'
 
 export default function SubscriptionPage() {
-  const [plans, setPlans] = useState([
-    { id: 'free', name: 'Free', price: 0, features: ['3 invoices/month', 'CSV upload', 'Single PDF'] },
-    { id: 'pro', name: 'Pro', price: 9, features: ['Unlimited invoices', 'CSV bulk import', 'Multi-PDF', 'Recurring', 'Stripe payments'] },
-    { id: 'business', name: 'Business', price: 29, features: ['Everything in Pro', 'Team members (5)', 'API access', 'Priority support'] }
-  ])
+  const [loading, setLoading] = useState(false)
   const [currentPlan, setCurrentPlan] = useState('free')
-  const [loading, setLoading] = useState(null)
   const router = useRouter()
   const supabase = createClient()
+
+  const plans = [
+    { id: 'free', name: 'Free', price: 0, features: ['3 invoices/month', 'CSV upload', 'Single PDF'] },
+    { id: 'pro', name: 'Pro', price: 9, priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID, features: ['Unlimited invoices', 'CSV bulk import', 'Multi-PDF', 'Recurring', 'Stripe payments'] },
+    { id: 'business', name: 'Business', price: 29, priceId: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID, features: ['Everything in Pro', 'Team members (5)', 'API access', 'Priority support'] }
+  ]
 
   useEffect(() => {
     getUserPlan()
@@ -38,16 +39,18 @@ export default function SubscriptionPage() {
       return
     }
 
-    setLoading(plan.id)
-    toast.loading('Redirecting to checkout...')
+    if (!plan.priceId) {
+      toast.error('Subscription not configured. Please contact support.')
+      return
+    }
 
-    const priceId = plan.id === 'pro' 
-      ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID 
-      : process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID
+    setLoading(true)
+    toast.loading('Redirecting to Stripe...')
 
-    if (!priceId) {
-      toast.error('Subscription not configured')
-      setLoading(null)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error('Please log in first')
+      setLoading(false)
       return
     }
 
@@ -56,20 +59,25 @@ export default function SubscriptionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId: priceId,
+          priceId: plan.priceId,
           planName: plan.name,
-          returnUrl: window.location.origin + '/dashboard/subscription/success'
+          userId: user.id,
+          userEmail: user.email,
+          returnUrl: window.location.origin
         })
       })
 
       const data = await response.json()
-      if (data.url) window.location.href = data.url
-      else toast.error(data.error || 'Error creating subscription')
+      
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        toast.error(data.error || 'Error creating subscription')
+        setLoading(false)
+      }
     } catch (error) {
       toast.error('Error: ' + error.message)
-    } finally {
-      setLoading(null)
-      toast.dismiss()
+      setLoading(false)
     }
   }
 
@@ -105,16 +113,16 @@ export default function SubscriptionPage() {
               </ul>
               <button
                 onClick={() => handleSubscribe(plan)}
-                disabled={loading === plan.id || currentPlan === plan.id}
+                disabled={loading || currentPlan === plan.id}
                 className={`w-full py-2 rounded-lg font-semibold ${
                   currentPlan === plan.id
                     ? 'bg-gray-300 cursor-not-allowed text-gray-600'
                     : plan.price === 0
                     ? 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+                } disabled:opacity-50`}
               >
-                {loading === plan.id ? 'Processing...' : currentPlan === plan.id ? 'Current Plan' : plan.price === 0 ? 'Get Started' : 'Upgrade'}
+                {loading ? 'Processing...' : currentPlan === plan.id ? 'Current Plan' : plan.price === 0 ? 'Get Started' : 'Upgrade'}
               </button>
             </div>
           </div>

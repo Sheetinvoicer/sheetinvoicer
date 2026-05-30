@@ -1,18 +1,20 @@
 'use client'
 
-import { Suspense } from 'react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import toast, { Toaster } from 'react-hot-toast'
 
-function SuccessContent() {
+export default function SubscriptionSuccess() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
     if (sessionId) {
-      // Verify subscription
+      // Update user's plan (webhook will handle this, but we can also update here)
       setLoading(false)
     } else {
       setLoading(false)
@@ -21,15 +23,18 @@ function SuccessContent() {
 
   if (loading) {
     return (
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Verifying your subscription...</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verifying your subscription...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <>
+    <div className="max-w-2xl mx-auto text-center py-20">
+      <Toaster />
       <div className="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
         <span className="text-4xl">🎉</span>
       </div>
@@ -37,7 +42,7 @@ function SuccessContent() {
         Subscription Successful!
       </h1>
       <p className="text-gray-600 dark:text-gray-400 mb-8">
-        Thank you for subscribing. Your account has been upgraded.
+        Thank you for upgrading. Your account has been updated.
       </p>
       <Link
         href="/dashboard"
@@ -45,21 +50,6 @@ function SuccessContent() {
       >
         Go to Dashboard
       </Link>
-    </>
-  )
-}
-
-export default function SubscriptionSuccessPage() {
-  return (
-    <div className="max-w-2xl mx-auto text-center py-20">
-      <Suspense fallback={
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      }>
-        <SuccessContent />
-      </Suspense>
     </div>
   )
 }

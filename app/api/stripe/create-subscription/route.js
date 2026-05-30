@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 export async function POST(request) {
   try {
-    const { priceId, planName, returnUrl } = await request.json()
+    const { priceId, planName, userId, userEmail, returnUrl } = await request.json()
 
     if (!priceId) {
       return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
@@ -14,10 +14,14 @@ export async function POST(request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
+      customer_email: userEmail,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${returnUrl}/dashboard/subscription/success`,
+      success_url: `${returnUrl}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${returnUrl}/dashboard/subscription`,
-      metadata: { planName },
+      metadata: {
+        userId: userId,
+        planName: planName,
+      },
     })
 
     return NextResponse.json({ url: session.url })

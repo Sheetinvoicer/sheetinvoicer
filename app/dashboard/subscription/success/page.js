@@ -1,30 +1,8 @@
-'use client'
+export const dynamic = 'force-dynamic';
 
-import { Suspense } from 'react'
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-
-function SuccessContent() {
-  const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Verifying your subscription...</p>
-      </div>
-    )
-  }
-
+export default function SubscriptionSuccess() {
   return (
-    <>
+    <div className="max-w-2xl mx-auto text-center py-20">
       <div className="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
         <span className="text-4xl">🎉</span>
       </div>
@@ -34,19 +12,12 @@ function SuccessContent() {
       <p className="text-gray-600 dark:text-gray-400 mb-8">
         Thank you for upgrading. Your account has been updated.
       </p>
-      <Link href="/dashboard" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+      <a
+        href="/dashboard"
+        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+      >
         Go to Dashboard
-      </Link>
-    </>
-  )
-}
-
-export default function SubscriptionSuccess() {
-  return (
-    <div className="max-w-2xl mx-auto text-center py-20">
-      <Suspense fallback={<div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p className="mt-4 text-gray-600">Loading...</p></div>}>
-        <SuccessContent />
-      </Suspense>
+      </a>
     </div>
   )
 }

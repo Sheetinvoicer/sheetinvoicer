@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, Zap, Rocket, Sparkles, TrendingUp, CreditCard, Users, FileText, Download, Repeat, Mail, Shield, BarChart } from 'lucide-react'
+import { Check, X, Zap, Rocket, Sparkles, TrendingUp, CreditCard, Users, FileText, Download, Repeat, Mail, Shield, BarChart, Upload } from 'lucide-react'
 
 export default function PricingPage() {
   const [billing, setBilling] = useState('monthly')

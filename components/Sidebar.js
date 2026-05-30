@@ -26,15 +26,13 @@ export default function Sidebar() {
   }
 
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { name: 'Invoices', href: '/dashboard/invoices', icon: '📄' },
-    { name: 'Clients', href: '/dashboard/clients', icon: '👥' },
-    { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
-    { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
-{ name: 'Pricing', href: '/pricing', icon: '💰' },
-    { name: 'Pricing', href: '/pricing', icon: '💳' },
-    
-  ]
+  { name: 'Dashboard', href: '/dashboard', icon: '📊' },
+  { name: 'Invoices', href: '/dashboard/invoices', icon: '📄' },
+  { name: 'Clients', href: '/dashboard/clients', icon: '👥' },
+  { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
+  { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+  { name: 'Pricing', href: '/pricing', icon: '💰' },
+]
 
   return (
     <>

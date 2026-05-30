@@ -31,6 +31,7 @@ export default function Sidebar() {
     { name: 'Clients', href: '/dashboard/clients', icon: '👥' },
     { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
     { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+{ name: 'Pricing', href: '/pricing', icon: '💰' },
     { name: 'Subscription', href: '/dashboard/subscription', icon: '💳' },
     
   ]

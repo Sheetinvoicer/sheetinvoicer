@@ -159,7 +159,7 @@ export default function PricingPage() {
                   </ul>
                   
                   <Link
-                    href={plan.price === 0 ? '/signup' : '/dashboard/subscription'}
+                    href={plan.price === 0 ? '/signup' : 'handleSubscribe'}
                     className={`mt-8 w-full block text-center py-3 rounded-xl font-semibold transition-all ${
                       plan.price === 0
                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300'

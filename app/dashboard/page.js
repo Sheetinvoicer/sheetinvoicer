@@ -307,14 +307,14 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back, {user?.email?.split('@')[0]}! 👋</p>
         </div>
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </span>
-          </div>
-        </div>
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2 cursor-pointer" onClick={() => alert('Open calendar')}>
+  <div className="flex items-center gap-2">
+    <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+    <span className="text-sm text-gray-600 dark:text-gray-400">
+      {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+    </span>
+  </div>
+</div>
       </div>
 
       <CustomizableDashboard widgetContent={widgetContent} />

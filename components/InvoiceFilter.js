@@ -1,4 +1,3 @@
-cat > components/InvoiceFilter.js << 'EOF'
 'use client'
 
 import { useState } from 'react'
@@ -94,4 +93,3 @@ export default function InvoiceFilter({ onFilter }) {
     </div>
   )
 }
-EOF

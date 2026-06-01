@@ -1,4 +1,3 @@
-cat > app/login/page.js << 'EOF'
 'use client'
 
 import { useState } from 'react'
@@ -107,6 +106,7 @@ export default function LoginPage() {
                     placeholder-gray-400 dark:placeholder-gray-500 transition-all"
                 />
               </div>
+              
               <div className="text-right">
                 <button
                   type="button"
@@ -116,6 +116,7 @@ export default function LoginPage() {
                   Forgot password?
                 </button>
               </div>
+              
               <button
                 type="submit"
                 disabled={loading}
@@ -215,4 +216,3 @@ export default function LoginPage() {
     </div>
   )
 }
-EOF

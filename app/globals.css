@@ -187,3 +187,36 @@ body {
 .space-y-6 > * + * {
   margin-top: 1.5rem;
 }
+
+/* Android and mobile fixes */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Improve touch targets */
+  button, 
+  a, 
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better text scaling */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  /* Fix for Android Chrome */
+  input, select, textarea {
+    font-size: 16px;
+  }
+}

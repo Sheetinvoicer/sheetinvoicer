@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import InvoicePDF from '@/components/pdf/InvoicePDF'
 import toast, { Toaster } from 'react-hot-toast'
+import posthog from 'posthog-js'
 
 export default function InvoiceDetailPage({ params }) {
   const [invoice, setInvoice] = useState(null)
@@ -63,6 +64,7 @@ export default function InvoiceDetailPage({ params }) {
     if (error) {
       toast.error('Error updating status')
     } else {
+      posthog.capture('invoice_status_updated', { invoice_id: invoiceId, new_status: newStatus })
       toast.success(`Invoice marked as ${newStatus}`)
       const { data } = await supabase
         .from('invoices')
@@ -83,6 +85,7 @@ export default function InvoiceDetailPage({ params }) {
       if (error) {
         toast.error('Error deleting invoice')
       } else {
+        posthog.capture('invoice_deleted', { invoice_id: invoiceId })
         toast.success('Invoice deleted')
         router.push('/dashboard/invoices')
       }
@@ -90,6 +93,11 @@ export default function InvoiceDetailPage({ params }) {
   }
 
   const handlePayment = async () => {
+    posthog.capture('invoice_payment_initiated', {
+      invoice_id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      amount: invoice.total,
+    })
     setProcessingPayment(true)
     try {
       const response = await fetch('/api/stripe/create-checkout', {
@@ -110,8 +118,10 @@ export default function InvoiceDetailPage({ params }) {
         window.location.href = data.url
       } else {
         toast.error('Error creating payment session')
+        setProcessingPayment(false)
       }
     } catch (error) {
+      posthog.captureException(error, { event: 'invoice_payment_error', invoice_id: invoice?.id })
       toast.error('Error starting payment')
       setProcessingPayment(false)
     }
@@ -122,6 +132,11 @@ export default function InvoiceDetailPage({ params }) {
       return
     }
 
+    posthog.capture('invoice_refund_initiated', {
+      invoice_id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      amount: invoice.total,
+    })
     setProcessingRefund(true)
     try {
       const response = await fetch('/api/stripe/refund', {
@@ -184,12 +199,18 @@ export default function InvoiceDetailPage({ params }) {
       const data = await response.json()
 
       if (data.success) {
+        posthog.capture('invoice_email_sent', {
+          invoice_id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          amount: invoice.total,
+        })
         toast.success('Email sent successfully!')
         updateStatus('sent')
       } else {
         toast.error(data.error || 'Error sending email')
       }
     } catch (error) {
+      posthog.captureException(error, { event: 'invoice_email_error', invoice_id: invoice?.id })
       toast.error('Error sending email')
     } finally {
       setProcessingEmail(false)

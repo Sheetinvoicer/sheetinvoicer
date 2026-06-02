@@ -1,5 +1,6 @@
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -45,11 +46,25 @@ export async function POST(request) {
         subscription_ends_at: new Date(subscription.current_period_end * 1000).toISOString()
       })
       .eq('id', userId)
+
+    const posthog = getPostHogClient()
+    posthog.capture({
+      distinctId: userId,
+      event: 'subscription_checkout_completed',
+      properties: { plan_tier: planTier, price_id: priceId },
+    })
+    await posthog.shutdown()
   }
 
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object
     const supabase = createClient()
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('stripe_subscription_id', subscription.id)
+      .single()
 
     await supabase
       .from('users')
@@ -59,6 +74,15 @@ export async function POST(request) {
         subscription_status: 'canceled'
       })
       .eq('stripe_subscription_id', subscription.id)
+
+    if (userData?.id) {
+      const posthog = getPostHogClient()
+      posthog.capture({
+        distinctId: userData.id,
+        event: 'subscription_canceled',
+      })
+      await posthog.shutdown()
+    }
   }
 
   return Response.json({ received: true })

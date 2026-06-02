@@ -311,7 +311,7 @@ export default function DashboardPage() {
   <div className="flex items-center gap-2">
     <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
     <span className="text-sm text-gray-600 dark:text-gray-400">
-      {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+      {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
     </span>
   </div>
 </div>

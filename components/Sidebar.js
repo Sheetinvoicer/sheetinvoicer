@@ -31,23 +31,23 @@ export default function Sidebar() {
     { name: 'Clients', href: '/dashboard/clients', icon: '👥' },
     { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
     { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
-    { name: 'Pricing', href: '/pricing', icon: '💰' },
+    { name: 'Subscription', href: '/dashboard/subscription', icon: '💳' },
+    
   ]
 
   return (
     <>
-      {/* Mobile Menu Button - fixed position doesn't overlap content */}
+      {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg"
-        aria-label="Menu"
       >
         ☰
       </button>
 
       {/* Sidebar */}
-      <div className={`fixed lg:relative z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-transform duration-300 ${
-        mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      <div className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-all duration-300 ${
+        mobileOpen ? 'left-0' : '-left-72 lg:left-0'
       }`}>
         <div className="mb-8">
           <Logo />

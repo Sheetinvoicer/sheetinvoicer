@@ -3,15 +3,13 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast, { Toaster } from 'react-hot-toast'
-import ConfirmModal from '@/components/ConfirmModal'
+import posthog from 'posthog-js'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingClient, setEditingClient] = useState(null)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [clientToDelete, setClientToDelete] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,10 +50,11 @@ export default function ClientsPage() {
           address: formData.address
         })
         .eq('id', editingClient.id)
-      
+
       if (error) {
         toast.error('Error updating client')
       } else {
+        posthog.capture('client_updated', { client_id: editingClient.id })
         toast.success('Client updated!')
         setShowModal(false)
         loadClients()
@@ -70,10 +69,11 @@ export default function ClientsPage() {
           phone: formData.phone,
           address: formData.address
         })
-      
+
       if (error) {
         toast.error('Error creating client')
       } else {
+        posthog.capture('client_created')
         toast.success('Client added!')
         setShowModal(false)
         loadClients()
@@ -81,27 +81,20 @@ export default function ClientsPage() {
     }
   }
 
-  const confirmDelete = (client) => {
-    setClientToDelete(client)
-    setShowDeleteModal(true)
-  }
-
-  const deleteClient = async () => {
-    if (!clientToDelete) return
-    
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', clientToDelete.id)
-    
-    setShowDeleteModal(false)
-    setClientToDelete(null)
-    
-    if (error) {
-      toast.error('Error deleting client')
-    } else {
-      toast.success('Client deleted')
-      loadClients()
+  const deleteClient = async (id) => {
+    if (confirm('Are you sure you want to delete this client?')) {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id)
+      
+      if (error) {
+        toast.error('Error deleting client')
+      } else {
+        posthog.capture('client_deleted', { client_id: id })
+        toast.success('Client deleted')
+        loadClients()
+      }
     }
   }
 
@@ -127,8 +120,8 @@ export default function ClientsPage() {
       <Toaster />
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Clients</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your clients and customers</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Clients</h1>
+          <p className="text-gray-600">Manage your clients and customers</p>
         </div>
         <button
           onClick={openAddModal}
@@ -141,10 +134,10 @@ export default function ClientsPage() {
       {loading ? (
         <div className="text-center py-12 text-gray-500">Loading...</div>
       ) : clients.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-12 text-center border border-gray-100 dark:border-gray-700">
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
           <span className="text-6xl mb-4 block">👥</span>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No clients yet</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">Add your first client to start creating invoices</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No clients yet</h3>
+          <p className="text-gray-500 mb-4">Add your first client to start creating invoices</p>
           <button
             onClick={openAddModal}
             className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
@@ -153,40 +146,40 @@ export default function ClientsPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+              <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Name</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Email</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Phone</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Address</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Actions</th>
+                  <th className="text-left p-4 text-gray-700 font-medium">Name</th>
+                  <th className="text-left p-4 text-gray-700 font-medium">Email</th>
+                  <th className="text-left p-4 text-gray-700 font-medium">Phone</th>
+                  <th className="text-left p-4 text-gray-700 font-medium">Address</th>
+                  <th className="text-left p-4 text-gray-700 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {clients.map((client) => (
-                  <tr key={client.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900">
-                    <td className="p-4 font-medium text-gray-900 dark:text-white">{client.name}</td>
-                    <td className="p-4 text-gray-600 dark:text-gray-400">{client.email}</td>
-                    <td className="p-4 text-gray-600 dark:text-gray-400">{client.phone || '-'}</td>
-                    <td className="p-4 text-gray-600 dark:text-gray-400">{client.address || '-'}</td>
-                    <td className="p-4 space-x-3">
+                  <tr key={client.id} className="border-b hover:bg-gray-50">
+                    <td className="p-4 font-medium text-gray-900">{client.name}</td>
+                    <td className="p-4 text-gray-600">{client.email}</td>
+                    <td className="p-4 text-gray-600">{client.phone || '-'}</td>
+                    <td className="p-4 text-gray-600">{client.address || '-'}</td>
+                    <td className="p-4 space-x-2">
                       <button
                         onClick={() => openEditModal(client)}
-                        className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800"
+                        className="text-yellow-600 hover:text-yellow-800"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => confirmDelete(client)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-800"
+                        onClick={() => deleteClient(client.id)}
+                        className="text-red-600 hover:text-red-800"
                       >
                         Delete
                       </button>
                     </td>
-                  </tr>
+                   </tr>
                 ))}
               </tbody>
             </table>
@@ -194,65 +187,65 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4">
               {editingClient ? 'Edit Client' : 'Add New Client'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-900"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-900"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone (Optional)
                 </label>
                 <input
                   type="text"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-900"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address (Optional)
                 </label>
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows="3"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-900"
                 />
               </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -267,18 +260,6 @@ export default function ClientsPage() {
           </div>
         </div>
       )}
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={deleteClient}
-        title="Delete Client"
-        message={`Are you sure you want to delete "${clientToDelete?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-      />
     </div>
   )
 }

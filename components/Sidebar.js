@@ -25,6 +25,11 @@ export default function Sidebar() {
     router.refresh()
   }
 
+  const handleNavigation = (href) => {
+    setMobileOpen(false)
+    router.push(href)
+  }
+
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: '📊' },
     { name: 'Invoices', href: '/dashboard/invoices', icon: '📄' },
@@ -36,27 +41,31 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+        aria-label="Menu"
       >
         ☰
       </button>
 
-      <div className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-all duration-300 ${
-        mobileOpen ? 'left-0' : '-left-72 lg:left-0'
-      }`}>
+      {/* Sidebar */}
+      <div
+        className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-transform duration-300 ease-in-out ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+      >
         <div className="mb-8">
           <Logo />
         </div>
-        
+
         <nav className="space-y-1">
           {navItems.map((item) => (
-            <Link
+            <button
               key={item.name}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              onClick={() => handleNavigation(item.href)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
                 pathname === item.href
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -64,7 +73,7 @@ export default function Sidebar() {
             >
               <span className="text-xl">{item.icon}</span>
               <span>{item.name}</span>
-            </Link>
+            </button>
           ))}
         </nav>
 
@@ -87,6 +96,7 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"

@@ -13,7 +13,7 @@ export default function SubscriptionPage() {
       id: 'free',
       name: 'Free',
       price: 0,
-      features: ['10 invoices/month', 'CSV upload', 'Single PDF export', 'Client management']
+      features: ['5 invoices/month', 'CSV upload', 'Single PDF export', 'Client management']
     },
     {
       id: 'pro',

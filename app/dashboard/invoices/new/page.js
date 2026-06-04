@@ -7,6 +7,7 @@ import ColumnMapper from '@/components/ColumnMapper'
 import { createClient } from '@/lib/supabase/client'
 import toast, { Toaster } from 'react-hot-toast'
 import posthog from 'posthog-js'
+import { canCreateInvoice } from '@/lib/subscription'
 
 export default function NewInvoiceWizard() {
   const [step, setStep] = useState(1)
@@ -34,6 +35,14 @@ export default function NewInvoiceWizard() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       
+      // Check free tier limit
+      const { allowed, message } = await canCreateInvoice(user.id, csvData.length)
+      if (!allowed) {
+        toast.error(message)
+        setProcessing(false)
+        return
+      }
+      
       for (const row of csvData) {
         const clientName = row[mapping.name]
         const clientEmail = row[mapping.email]
@@ -41,7 +50,6 @@ export default function NewInvoiceWizard() {
         
         if (!clientName || !clientEmail || isNaN(amount)) continue
         
-        // Check if client exists
         let clientId = null
         const { data: existingClient } = await supabase
           .from('clients')

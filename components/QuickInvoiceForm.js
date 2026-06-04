@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import toast from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import Button from './Button'
 import FormInput from './FormInput'
 import Modal from './Modal'
@@ -21,6 +21,35 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     
+    if (!user) {
+      toast.error('Please login first')
+      setLoading(false)
+      return
+    }
+    
+    // Get user's plan from user_profiles
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('plan')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    
+    const planType = profile?.plan?.toLowerCase() || 'free'
+    
+    // Count existing invoices
+    const { count } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    
+    // Free plan: max 5 invoices
+    if (planType === 'free' && count >= 5) {
+      toast.error(`Free plan limited to 5 invoices. You have ${count}/5. Please upgrade to Pro.`)
+      setLoading(false)
+      setIsOpen(false)
+      return
+    }
+    
     const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`
     
     const { error } = await supabase
@@ -38,7 +67,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     setLoading(false)
     
     if (error) {
-      toast.error('Error creating invoice')
+      toast.error('Error creating invoice: ' + error.message)
     } else {
       toast.success('Invoice created!')
       setIsOpen(false)
@@ -49,6 +78,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
 
   return (
     <>
+      <Toaster position="top-right" />
       <Button onClick={() => setIsOpen(true)} variant="success" size="sm">
         ⚡ Quick Invoice
       </Button>

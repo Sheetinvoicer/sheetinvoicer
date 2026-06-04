@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import Logo from './Logo'
+import Logo from '@/components/Logo'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -32,12 +32,10 @@ export default function Sidebar() {
     { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
     { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
     { name: 'Subscription', href: '/dashboard/subscription', icon: '💳' },
-    
   ]
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg"
@@ -45,7 +43,6 @@ export default function Sidebar() {
         ☰
       </button>
 
-      {/* Sidebar */}
       <div className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-all duration-300 ${
         mobileOpen ? 'left-0' : '-left-72 lg:left-0'
       }`}>
@@ -90,7 +87,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"

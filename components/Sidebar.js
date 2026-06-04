@@ -1,15 +1,14 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import Logo from '@/components/Logo'
 
 export default function Sidebar() {
-  const pathname = usePathname()
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -26,8 +25,12 @@ export default function Sidebar() {
   }
 
   const handleNavigation = (href) => {
+    // Close menu first
     setMobileOpen(false)
-    router.push(href)
+    // Small delay to ensure menu closes before navigation
+    setTimeout(() => {
+      router.push(href)
+    }, 50)
   }
 
   const navItems = [
@@ -44,7 +47,9 @@ export default function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+        onTouchStart={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg shadow-lg"
+        style={{ minWidth: '44px', minHeight: '44px' }}
         aria-label="Menu"
       >
         ☰
@@ -65,11 +70,13 @@ export default function Sidebar() {
             <button
               key={item.name}
               onClick={() => handleNavigation(item.href)}
+              onTouchStart={() => handleNavigation(item.href)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
                 pathname === item.href
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
+              style={{ minHeight: '48px' }}
             >
               <span className="text-xl">{item.icon}</span>
               <span>{item.name}</span>
@@ -80,7 +87,9 @@ export default function Sidebar() {
         <div className="absolute bottom-6 left-6 right-6 space-y-2">
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onTouchStart={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+            style={{ minHeight: '48px' }}
           >
             <span className="text-xl">{mounted && (theme === 'dark' ? '☀️' : '🌙')}</span>
             <span>{mounted && (theme === 'dark' ? 'Light Mode' : 'Dark Mode')}</span>
@@ -88,7 +97,9 @@ export default function Sidebar() {
 
           <button
             onClick={handleLogout}
+            onTouchStart={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+            style={{ minHeight: '48px' }}
           >
             <span className="text-xl">🚪</span>
             <span>Logout</span>
@@ -101,6 +112,7 @@ export default function Sidebar() {
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setMobileOpen(false)}
+          onTouchStart={() => setMobileOpen(false)}
         />
       )}
     </>

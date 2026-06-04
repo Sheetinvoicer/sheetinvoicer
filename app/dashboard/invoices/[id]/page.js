@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import Link from 'next/link'
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -93,12 +95,13 @@ export default function InvoiceDetailPage({ params }) {
   }
 
   const handlePayment = async () => {
+    setProcessingPayment(true)
     posthog.capture('invoice_payment_initiated', {
       invoice_id: invoice.id,
       invoice_number: invoice.invoice_number,
       amount: invoice.total,
     })
-    setProcessingPayment(true)
+    
     try {
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
@@ -109,220 +112,197 @@ export default function InvoiceDetailPage({ params }) {
           amount: invoice.total,
           clientName: invoice.clients?.name,
           clientEmail: invoice.clients?.email,
-          returnUrl: window.location.href,
+          returnUrl: `${window.location.origin}/dashboard/invoices/${invoice.id}`,
         }),
       })
       
-      const data = await response.json()
-      if (data.url) {
-        window.location.href = data.url
+      const { url } = await response.json()
+      if (url) {
+        window.location.href = url
       } else {
-        toast.error('Error creating payment session')
-        setProcessingPayment(false)
+        toast.error('Failed to create payment session')
       }
     } catch (error) {
-      posthog.captureException(error, { event: 'invoice_payment_error', invoice_id: invoice?.id })
-      toast.error('Error starting payment')
+      toast.error('Payment error')
+    } finally {
       setProcessingPayment(false)
     }
   }
 
-  const handleRefund = async () => {
-    if (!confirm('Are you sure you want to refund this payment? This action cannot be undone.')) {
-      return
-    }
-
-    posthog.capture('invoice_refund_initiated', {
-      invoice_id: invoice.id,
-      invoice_number: invoice.invoice_number,
-      amount: invoice.total,
-    })
-    setProcessingRefund(true)
-    try {
-      const response = await fetch('/api/stripe/refund', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoiceId: invoice.id }),
-      })
-      
-      const data = await response.json()
-      
-      if (data.success) {
-        toast.success('Refund processed successfully!')
-        updateStatus('refunded')
-      } else {
-        toast.error(data.error || 'Error processing refund')
-      }
-    } catch (error) {
-      toast.error('Error processing refund')
-    } finally {
-      setProcessingRefund(false)
-    }
-  }
-
-  const handleSendEmail = async () => {
-    if (!invoice.clients?.email) {
-      toast.error('Client has no email address')
-      return
-    }
-
+  const sendEmail = async () => {
     setProcessingEmail(true)
-    toast.loading('Sending email...')
-
     try {
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Invoice ${invoice.invoice_number}</h2>
-          <p>Dear ${invoice.clients?.name},</p>
-          <p>Please find invoice ${invoice.invoice_number} for your reference.</p>
-          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Amount Due:</strong> $${invoice.total?.toLocaleString()}</p>
-            <p><strong>Status:</strong> ${invoice.status}</p>
-            <p><strong>Date:</strong> ${new Date(invoice.created_at).toLocaleDateString()}</p>
-          </div>
-          <p>Click the button below to view and pay this invoice:</p>
-          <a href="https://sheetinvoicer.vercel.app/pay/${invoice.id}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View & Pay Invoice</a>
-          <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">Thank you for your business!</p>
-        </div>
-      `
-
       const response = await fetch('/api/send-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: invoice.clients.email,
-          subject: `Invoice ${invoice.invoice_number} from ${business?.name || 'SheetInvoicer'}`,
-          html: emailHtml,
+          to: invoice.clients?.email,
+          subject: `Invoice ${invoice.invoice_number} from ${business?.business_name || 'SheetInvoicer'}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px;">
+              <h2>Invoice ${invoice.invoice_number}</h2>
+              <p>Dear ${invoice.clients?.name},</p>
+              <p>Please find your invoice attached.</p>
+              <p><strong>Amount Due:</strong> $${(invoice.total || 0).toFixed(2)}</p>
+              <p><strong>Due Date:</strong> ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Upon receipt'}</p>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/pay/${invoice.id}" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Pay Now</a>
+            </div>
+          `,
         }),
       })
-
-      const data = await response.json()
-
-      if (data.success) {
-        posthog.capture('invoice_email_sent', {
-          invoice_id: invoice.id,
-          invoice_number: invoice.invoice_number,
-          amount: invoice.total,
-        })
+      
+      if (response.ok) {
         toast.success('Email sent successfully!')
-        updateStatus('sent')
       } else {
-        toast.error(data.error || 'Error sending email')
+        toast.error('Failed to send email')
       }
     } catch (error) {
-      posthog.captureException(error, { event: 'invoice_email_error', invoice_id: invoice?.id })
-      toast.error('Error sending email')
+      toast.error('Email error')
     } finally {
       setProcessingEmail(false)
-      toast.dismiss()
     }
   }
 
   if (loading) {
-    return <div className="p-8 text-center">Loading invoice...</div>
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-500">Loading invoice...</div>
+      </div>
+    )
   }
 
   if (!invoice) {
-    return <div className="p-8 text-center">Invoice not found</div>
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Invoice not found</p>
+        <Link href="/dashboard/invoices" className="text-blue-600 mt-4 inline-block">
+          Back to Invoices
+        </Link>
+      </div>
+    )
   }
 
   return (
-    <div className="p-8">
-      <Toaster />
-      <h1 className="text-3xl font-bold mb-4">Invoice {invoice.invoice_number}</h1>
+    <div className="max-w-4xl mx-auto p-4 md:p-6">
+      <Toaster position="top-right" />
       
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="mb-6">
-          <p className="mb-2"><strong>Client:</strong> {invoice.clients?.name}</p>
-          <p className="mb-2"><strong>Email:</strong> {invoice.clients?.email}</p>
-          <p className="mb-2"><strong>Amount:</strong> ${invoice.total}</p>
-          <p className="mb-4"><strong>Notes:</strong> {invoice.notes || 'None'}</p>
-          
-          <div className="mb-4">
-            <strong>Status:</strong> 
-            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-              invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-              invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' : 
-              invoice.status === 'refunded' ? 'bg-red-100 text-red-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {invoice.status}
-            </span>
-          </div>
-          
-          {invoice.status !== 'paid' && invoice.status !== 'refunded' && (
-            <div className="space-x-2 mb-4">
-              <button
-                onClick={() => updateStatus('sent')}
-                className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-              >
-                Mark as Sent
-              </button>
-              <button
-                onClick={() => updateStatus('paid')}
-                className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-              >
-                Mark as Paid (Manual)
-              </button>
-            </div>
-          )}
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <Link 
+          href="/dashboard/invoices" 
+          className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+        >
+          ← Back to Invoices
+        </Link>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => updateStatus('sent')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Mark as Sent
+          </button>
+          <button
+            onClick={() => updateStatus('paid')}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Mark as Paid
+          </button>
         </div>
       </div>
-      
-      <div className="mt-4 space-x-3 flex flex-wrap gap-2">
-        <button 
-          onClick={() => router.push('/dashboard/invoices')}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-        >
-          Back
-        </button>
-        <button 
-          onClick={() => router.push(`/dashboard/invoices/${invoiceId}/edit`)}
-          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-        >
-          Edit
-        </button>
-        <button 
-          onClick={deleteInvoice}
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        >
-          Delete
-        </button>
-        <PDFDownloadLink
-          document={<InvoicePDF invoice={invoice} business={business} />}
-          fileName={`invoice-${invoice.invoice_number}.pdf`}
-          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 inline-block"
-        >
-          {({ loading }) => loading ? 'Generating...' : 'Download PDF'}
-        </PDFDownloadLink>
-        
-        <button
-          onClick={handleSendEmail}
-          disabled={processingEmail}
-          className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 disabled:opacity-50"
-        >
-          {processingEmail ? 'Sending...' : 'Send Email'}
-        </button>
-        
-        {invoice.status !== 'paid' && invoice.status !== 'refunded' && (
-          <button
-            onClick={handlePayment}
-            disabled={processingPayment}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
-          >
-            {processingPayment ? 'Processing...' : 'Pay Now'}
-          </button>
-        )}
-        
-        {invoice.status === 'paid' && (
-          <button
-            onClick={handleRefund}
-            disabled={processingRefund}
-            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:opacity-50"
-          >
-            {processingRefund ? 'Processing...' : 'Refund'}
-          </button>
-        )}
+
+      {/* Invoice Card */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 md:p-8">
+          {/* Invoice Title */}
+          <div className="flex justify-between items-start flex-wrap gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                Invoice {invoice.invoice_number}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Created on {new Date(invoice.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+              invoice.status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+              invoice.status === 'sent' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+            }`}>
+              Status: {invoice.status || 'draft'}
+            </div>
+          </div>
+
+          {/* Client Info */}
+          <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <h2 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">Client Information</h2>
+            <div className="space-y-2">
+              <p className="text-gray-900 dark:text-white">
+                <span className="font-medium text-gray-600 dark:text-gray-400">Name:</span> {invoice.clients?.name || 'N/A'}
+              </p>
+              <p className="text-gray-900 dark:text-white">
+                <span className="font-medium text-gray-600 dark:text-gray-400">Email:</span> {invoice.clients?.email || 'N/A'}
+              </p>
+              {invoice.clients?.phone && (
+                <p className="text-gray-900 dark:text-white">
+                  <span className="font-medium text-gray-600 dark:text-gray-400">Phone:</span> {invoice.clients.phone}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Invoice Details */}
+          <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <h2 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">Invoice Details</h2>
+            <div className="space-y-2">
+              <p className="text-gray-900 dark:text-white">
+                <span className="font-medium text-gray-600 dark:text-gray-400">Amount:</span> 
+                <span className="text-xl font-bold text-gray-900 dark:text-white ml-2">${(invoice.total || 0).toFixed(2)}</span>
+              </p>
+              {invoice.notes && (
+                <p className="text-gray-900 dark:text-white">
+                  <span className="font-medium text-gray-600 dark:text-gray-400">Notes:</span> {invoice.notes}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Link
+              href={`/dashboard/invoices/${invoice.id}/edit`}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Edit Invoice
+            </Link>
+            <button
+              onClick={deleteInvoice}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Delete Invoice
+            </button>
+            <PDFDownloadLink
+              document={<InvoicePDF invoice={invoice} business={business} />}
+              fileName={`invoice-${invoice.invoice_number}.pdf`}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-center"
+            >
+              {({ loading }) => (loading ? 'Generating PDF...' : 'Download PDF')}
+            </PDFDownloadLink>
+            <button
+              onClick={sendEmail}
+              disabled={processingEmail}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            >
+              {processingEmail ? 'Sending...' : 'Send Email'}
+            </button>
+            <button
+              onClick={handlePayment}
+              disabled={processingPayment}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              {processingPayment ? 'Processing...' : 'Pay Now'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

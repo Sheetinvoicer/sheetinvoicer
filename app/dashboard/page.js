@@ -102,7 +102,6 @@ export default function DashboardPage() {
     { month: 'Jun', revenue: 6200, invoices: 14 }
   ]
 
-  // Stats Cards Component - CLICKABLE
   const StatCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <Link href="/dashboard/invoices" className="block group">
@@ -120,7 +119,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </Link>
-
       <Link href="/dashboard/clients" className="block group">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
           <div className="flex items-center justify-between">
@@ -136,7 +134,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </Link>
-
       <Link href="/dashboard/invoices?status=paid" className="block group">
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
           <div className="flex items-center justify-between">
@@ -152,7 +149,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </Link>
-
       <Link href="/dashboard/invoices?status=draft" className="block group">
         <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
           <div className="flex items-center justify-between">
@@ -171,7 +167,6 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Revenue Chart Component
   const RevenueChartComponent = () => (
     <div>
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Revenue Trend</h3>
@@ -181,7 +176,6 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Invoice Chart Component
   const InvoiceChartComponent = () => (
     <div>
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Invoice Volume</h3>
@@ -191,7 +185,6 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Value Chart Component
   const ValueChartComponent = () => (
     <div>
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Average Invoice Value</h3>
@@ -201,7 +194,7 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Recent Invoices Component
+  // RECENT INVOICES - NOW CLICKABLE with hover effect
   const RecentInvoicesComponent = () => (
     <div>
       <div className="flex justify-between items-center mb-3">
@@ -212,36 +205,42 @@ export default function DashboardPage() {
       </div>
       <div className="space-y-2">
         {recentInvoices.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No invoices yet
-          </div>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">No invoices yet</div>
         ) : (
           recentInvoices.map((invoice) => (
-            <div key={invoice.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{invoice.invoice_number}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{invoice.clients?.name}</p>
+            <Link
+              key={invoice.id}
+              href={`/dashboard/invoices/${invoice.id}`}
+              className="block p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all cursor-pointer hover:shadow-md"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{invoice.invoice_number}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{invoice.clients?.name}</p>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">${invoice.total?.toLocaleString()}</p>
               </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">${invoice.total?.toLocaleString()}</p>
-            </div>
+            </Link>
           ))
         )}
       </div>
     </div>
   )
 
-  // Activities Component
+  // RECENT ACTIVITIES - NOW CLICKABLE with hover effect
   const ActivitiesComponent = () => (
     <div>
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Recent Activities</h3>
       <div className="space-y-2">
         {recentActivities.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No recent activities
-          </div>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">No recent activities</div>
         ) : (
           recentActivities.map((activity) => (
-            <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <Link
+              key={activity.id}
+              href={`/dashboard/invoices/${activity.id}`}
+              className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all cursor-pointer hover:shadow-md"
+            >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 activity.type === 'payment' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'
               }`}>
@@ -257,14 +256,13 @@ export default function DashboardPage() {
                   {new Date(activity.date).toLocaleDateString()}
                 </p>
               </div>
-            </div>
+            </Link>
           ))
         )}
       </div>
     </div>
   )
 
-  // Quick Actions Component
   const QuickActionsComponent = () => (
     <div>
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Actions</h3>
@@ -307,14 +305,14 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back, {user?.email?.split('@')[0]}! 👋</p>
         </div>
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2 cursor-pointer" onClick={() => alert('Open calendar')}>
-  <div className="flex items-center gap-2">
-    <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-    <span className="text-sm text-gray-600 dark:text-gray-400">
-      {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-    </span>
-  </div>
-</div>
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+        </div>
       </div>
 
       <CustomizableDashboard widgetContent={widgetContent} />

@@ -16,3 +16,44 @@ body {
   background-color: var(--background);
   color: var(--foreground);
 }
+
+/* Mobile fixes */
+@media (max-width: 768px) {
+  /* Add space for the hamburger menu button */
+  main {
+    padding-top: 60px !important;
+  }
+  
+  /* Ensure content doesn't get hidden */
+  .max-w-7xl {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Mobile fixes - ensures content not hidden under menu button */
+@media (max-width: 768px) {
+  /* Extra top padding for main content */
+  main {
+    padding-top: 70px !important;
+  }
+  
+  /* Better touch targets for mobile */
+  button, 
+  a, 
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Ensure sidebar doesn't cover content when closed */
+  .fixed {
+    z-index: 40;
+  }
+}

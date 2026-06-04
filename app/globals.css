@@ -17,28 +17,14 @@ body {
   color: var(--foreground);
 }
 
-/* Mobile fixes */
+/* Mobile improvements */
 @media (max-width: 768px) {
-  /* Add space for the hamburger menu button */
-  main {
-    padding-top: 60px !important;
-  }
-  
-  /* Ensure content doesn't get hidden */
-  .max-w-7xl {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-}
-
-/* Mobile fixes - ensures content not hidden under menu button */
-@media (max-width: 768px) {
-  /* Extra top padding for main content */
+  /* Space for hamburger menu */
   main {
     padding-top: 70px !important;
   }
   
-  /* Better touch targets for mobile */
+  /* Better touch targets */
   button, 
   a, 
   [role="button"] {
@@ -51,9 +37,9 @@ body {
     overflow-x: hidden;
     width: 100%;
   }
-  
-  /* Ensure sidebar doesn't cover content when closed */
-  .fixed {
-    z-index: 40;
-  }
+}
+
+/* Smooth transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

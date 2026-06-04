@@ -21,13 +21,6 @@ export default function Sidebar() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
-    router.refresh()
-  }
-
-  const toggleMenu = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setMobileOpen(!mobileOpen)
   }
 
   const handleNavigation = (href) => {
@@ -48,17 +41,16 @@ export default function Sidebar() {
     <>
       {/* Mobile menu button */}
       <button
-        onClick={toggleMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg shadow-lg active:bg-blue-700 transition-colors"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg shadow-lg"
         style={{ minWidth: '48px', minHeight: '48px' }}
-        aria-label="Menu"
       >
         ☰
       </button>
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-transform duration-300 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -71,7 +63,7 @@ export default function Sidebar() {
             <button
               key={item.name}
               onClick={() => handleNavigation(item.href)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left active:bg-gray-100 dark:active:bg-gray-800 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${
                 pathname === item.href
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -87,7 +79,7 @@ export default function Sidebar() {
         <div className="absolute bottom-6 left-6 right-6 space-y-2">
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:bg-gray-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             style={{ minHeight: '48px' }}
           >
             <span className="text-xl">{mounted && (theme === 'dark' ? '☀️' : '🌙')}</span>
@@ -96,7 +88,7 @@ export default function Sidebar() {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all active:bg-red-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
             style={{ minHeight: '48px' }}
           >
             <span className="text-xl">🚪</span>

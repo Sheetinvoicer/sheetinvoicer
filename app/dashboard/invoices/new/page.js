@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import toast, { Toaster } from 'react-hot-toast'
 import posthog from 'posthog-js'
 import { canCreateInvoice } from '@/lib/subscription'
+import { generateInvoiceNumber } from '@/lib/invoiceNumber'
 
 export default function NewInvoiceWizard() {
   const [step, setStep] = useState(1)
@@ -35,7 +36,6 @@ export default function NewInvoiceWizard() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       
-      // Check free tier limit
       const { allowed, message } = await canCreateInvoice(user.id, csvData.length)
       if (!allowed) {
         toast.error(message)
@@ -73,7 +73,8 @@ export default function NewInvoiceWizard() {
         }
         
         if (clientId) {
-          const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+          // Generate auto-incrementing invoice number for each invoice
+          const invoiceNumber = await generateInvoiceNumber(user.id)
           
           await supabase
             .from('invoices')
@@ -137,6 +138,7 @@ export default function NewInvoiceWizard() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Review & Create</h3>
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-gray-900 font-medium">{csvData.length} invoices to create</p>
+              <p className="text-sm text-gray-500 mt-1">Invoice numbers will be auto-generated (e.g., INV-000001, INV-000002, etc.)</p>
             </div>
             <button
               onClick={handleGenerateInvoices}

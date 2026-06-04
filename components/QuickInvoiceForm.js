@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import Button from './Button'
 import FormInput from './FormInput'
 import Modal from './Modal'
+import { generateInvoiceNumber } from '@/lib/invoiceNumber'
 
 export default function QuickInvoiceForm({ clients, onSuccess }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -44,13 +45,13 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     
     // Free plan: max 5 invoices
     if (planType === 'free' && count >= 5) {
-      toast.error(`Free plan limited to 5 invoices. You have ${count}/5. Please upgrade to Pro.`)
+      toast.error(`Free plan limited to 5 invoices. You have ${count}/5. Upgrade to Pro.`)
       setLoading(false)
-      setIsOpen(false)
       return
     }
     
-    const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+    // Generate auto-incrementing invoice number
+    const invoiceNumber = await generateInvoiceNumber(user.id)
     
     const { error } = await supabase
       .from('invoices')
@@ -69,7 +70,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     if (error) {
       toast.error('Error creating invoice: ' + error.message)
     } else {
-      toast.success('Invoice created!')
+      toast.success(`Invoice ${invoiceNumber} created!`)
       setIsOpen(false)
       setFormData({ client_id: '', amount: '', notes: '' })
       onSuccess()
@@ -124,6 +125,10 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             placeholder="Invoice notes..."
           />
+          
+          <div className="text-xs text-gray-500">
+            Invoice number will be auto-generated (e.g., INV-000001)
+          </div>
         </div>
       </Modal>
     </>

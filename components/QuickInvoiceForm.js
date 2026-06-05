@@ -8,6 +8,7 @@ import FormInput from './FormInput'
 import Modal from './Modal'
 import { generateInvoiceNumber } from '@/lib/invoiceNumber'
 import TaxRateSelector from './TaxRateSelector'
+import DiscountInput from './DiscountInput'
 
 export default function QuickInvoiceForm({ clients, onSuccess }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -16,6 +17,8 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
   const [taxRate, setTaxRate] = useState(0)
   const [taxAmount, setTaxAmount] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [appliedDiscount, setAppliedDiscount] = useState(null)
   const [formData, setFormData] = useState({
     client_id: '',
     amount: '',
@@ -28,6 +31,16 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     setTaxRate(rate)
     setTaxAmount(taxAmt)
     setTotalAmount(total)
+  }
+
+  const handleDiscountApplied = (discountData) => {
+    if (discountData && discountData.success) {
+      setAppliedDiscount(discountData.discount)
+      setDiscountAmount(parseFloat(discountData.discountAmount))
+    } else {
+      setAppliedDiscount(null)
+      setDiscountAmount(0)
+    }
   }
 
   const handleSubmit = async () => {
@@ -60,7 +73,8 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     }
     
     const invoiceNumber = await generateInvoiceNumber(user.id)
-    const finalTotal = totalAmount > 0 ? totalAmount : parseFloat(formData.amount) || 0
+    const subtotal = parseFloat(formData.amount) || 0
+    const finalTotal = totalAmount > 0 ? totalAmount : subtotal - discountAmount
     
     const { error } = await supabase
       .from('invoices')
@@ -68,11 +82,13 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
         user_id: user.id,
         client_id: formData.client_id,
         invoice_number: invoiceNumber,
-        total: finalTotal,
-        subtotal: parseFloat(formData.amount) || 0,
+        subtotal: subtotal,
+        discount_amount: discountAmount,
+        discount_code_id: appliedDiscount?.id,
         tax_rate_id: selectedTaxId,
         tax_rate_percentage: taxRate,
         tax_amount: taxAmount,
+        total: finalTotal,
         notes: formData.notes,
         status: 'draft'
       })
@@ -89,6 +105,8 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
       setTaxRate(0)
       setTaxAmount(0)
       setTotalAmount(0)
+      setDiscountAmount(0)
+      setAppliedDiscount(null)
       onSuccess()
     }
   }
@@ -134,6 +152,12 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
             placeholder="0.00"
           />
           
+          <DiscountInput
+            subtotal={parseFloat(formData.amount) || 0}
+            userId={null}
+            onDiscountApplied={handleDiscountApplied}
+          />
+          
           <TaxRateSelector
             selectedTaxId={selectedTaxId}
             onTaxChange={handleTaxChange}
@@ -150,6 +174,9 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
           
           <div className="text-xs text-gray-500">
             Invoice number will be auto-generated (e.g., INV-000001)
+          </div>
+          <div className="text-xs text-blue-600">
+            💰 Try discount codes: WELCOME10 (10% off), SAVE20 ($20 off min $100), LAUNCH25 (25% off)
           </div>
         </div>
       </Modal>

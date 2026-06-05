@@ -14,8 +14,10 @@ const styles = StyleSheet.create({
   col1: { width: '60%' },
   col2: { width: '20%', textAlign: 'right' },
   col3: { width: '20%', textAlign: 'right' },
-  total: { marginTop: 20, paddingTop: 10, borderTopWidth: 2, borderTopColor: '#000', flexDirection: 'row', justifyContent: 'flex-end' },
-  totalText: { fontSize: 14, fontWeight: 'bold' },
+  total: { marginTop: 20, paddingTop: 10, borderTopWidth: 2, borderTopColor: '#000' },
+  totalLine: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 },
+  totalLabel: { fontSize: 12, fontWeight: 'bold', marginRight: 20 },
+  totalValue: { fontSize: 12, fontWeight: 'bold', width: 100, textAlign: 'right' },
   paymentBox: { marginTop: 20, padding: 10, backgroundColor: '#f0fdf4', borderRadius: 5 },
   paymentText: { fontSize: 10, textAlign: 'center', marginBottom: 5 },
   paymentLink: { fontSize: 9, textAlign: 'center', color: '#2563eb' },
@@ -23,7 +25,11 @@ const styles = StyleSheet.create({
 })
 
 export default function InvoicePDF({ invoice, business }) {
-  // REPLACE THIS WITH YOUR ACTUAL STRIPE PAYMENT LINK
+  const subtotal = invoice.subtotal || invoice.total || 0
+  const discountAmount = invoice.discount_amount || 0
+  const taxAmount = invoice.tax_amount || 0
+  const taxRate = invoice.tax_rate_percentage || 0
+  const total = invoice.total || subtotal - discountAmount + taxAmount
   const stripeLink = "https://buy.stripe.com/7sY00j8bsas3aL7bhQao800"
   
   return (
@@ -46,7 +52,7 @@ export default function InvoicePDF({ invoice, business }) {
           </View>
           <View>
             <Text>Status:</Text>
-            <Text>{invoice.status?.toUpperCase()}</Text>
+            <Text>{invoice.status?.toUpperCase() || 'DRAFT'}</Text>
           </View>
         </View>
 
@@ -55,6 +61,7 @@ export default function InvoicePDF({ invoice, business }) {
           <Text style={{ fontWeight: 'bold' }}>{invoice.clients?.name}</Text>
           <Text>{invoice.clients?.email}</Text>
           <Text>{invoice.clients?.address}</Text>
+          {invoice.clients?.state && <Text>{invoice.clients?.city}, {invoice.clients?.state} {invoice.clients?.zip}</Text>}
         </View>
 
         <View style={styles.table}>
@@ -66,22 +73,38 @@ export default function InvoicePDF({ invoice, business }) {
           <View style={styles.tableRow}>
             <Text style={styles.col1}>{invoice.notes || 'Service charge'}</Text>
             <Text style={styles.col2}>1</Text>
-            <Text style={styles.col3}>${invoice.total?.toLocaleString()}</Text>
+            <Text style={styles.col3}>${subtotal.toLocaleString()}</Text>
           </View>
         </View>
 
         <View style={styles.total}>
-          <View style={{ width: 200 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={styles.totalText}>Total:</Text>
-              <Text style={styles.totalText}>${invoice.total?.toLocaleString()}</Text>
+          <View style={{ width: 250, alignSelf: 'flex-end' }}>
+            <View style={styles.totalLine}>
+              <Text style={styles.totalLabel}>Subtotal:</Text>
+              <Text style={styles.totalValue}>${subtotal.toFixed(2)}</Text>
+            </View>
+            {discountAmount > 0 && (
+              <View style={styles.totalLine}>
+                <Text style={[styles.totalLabel, { color: '#059669' }]}>Discount ({invoice.discount_code}):</Text>
+                <Text style={[styles.totalValue, { color: '#059669' }]}>-${discountAmount.toFixed(2)}</Text>
+              </View>
+            )}
+            {taxAmount > 0 && (
+              <View style={styles.totalLine}>
+                <Text style={styles.totalLabel}>Tax ({taxRate}%):</Text>
+                <Text style={styles.totalValue}>${taxAmount.toFixed(2)}</Text>
+              </View>
+            )}
+            <View style={[styles.totalLine, { marginTop: 8, borderTopWidth: 1, borderTopColor: '#000', paddingTop: 4 }]}>
+              <Text style={[styles.totalLabel, { fontSize: 14 }]}>Total:</Text>
+              <Text style={[styles.totalValue, { fontSize: 14 }]}>${total.toFixed(2)}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.paymentBox}>
           <Text style={styles.paymentText}>💳 Pay Online</Text>
-          <Text style={styles.paymentLink}>{stripeLink}?amount={invoice.total}</Text>
+          <Text style={styles.paymentLink}>{stripeLink}?amount={total.toFixed(2)}</Text>
         </View>
 
         <Text style={styles.footer}>Thank you for your business!</Text>

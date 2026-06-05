@@ -7,16 +7,28 @@ import Button from './Button'
 import FormInput from './FormInput'
 import Modal from './Modal'
 import { generateInvoiceNumber } from '@/lib/invoiceNumber'
+import TaxRateSelector from './TaxRateSelector'
 
 export default function QuickInvoiceForm({ clients, onSuccess }) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [selectedTaxId, setSelectedTaxId] = useState(null)
+  const [taxRate, setTaxRate] = useState(0)
+  const [taxAmount, setTaxAmount] = useState(0)
+  const [totalAmount, setTotalAmount] = useState(0)
   const [formData, setFormData] = useState({
     client_id: '',
     amount: '',
     notes: ''
   })
   const supabase = createClient()
+
+  const handleTaxChange = (taxId, rate, taxAmt, total) => {
+    setSelectedTaxId(taxId)
+    setTaxRate(rate)
+    setTaxAmount(taxAmt)
+    setTotalAmount(total)
+  }
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -28,7 +40,6 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
       return
     }
     
-    // Get user's plan from user_profiles
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('plan')
@@ -37,21 +48,19 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     
     const planType = profile?.plan?.toLowerCase() || 'free'
     
-    // Count existing invoices
     const { count } = await supabase
       .from('invoices')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
     
-    // Free plan: max 5 invoices
     if (planType === 'free' && count >= 5) {
       toast.error(`Free plan limited to 5 invoices. You have ${count}/5. Upgrade to Pro.`)
       setLoading(false)
       return
     }
     
-    // Generate auto-incrementing invoice number
     const invoiceNumber = await generateInvoiceNumber(user.id)
+    const finalTotal = totalAmount > 0 ? totalAmount : parseFloat(formData.amount) || 0
     
     const { error } = await supabase
       .from('invoices')
@@ -59,8 +68,11 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
         user_id: user.id,
         client_id: formData.client_id,
         invoice_number: invoiceNumber,
-        total: parseFloat(formData.amount),
-        subtotal: parseFloat(formData.amount),
+        total: finalTotal,
+        subtotal: parseFloat(formData.amount) || 0,
+        tax_rate_id: selectedTaxId,
+        tax_rate_percentage: taxRate,
+        tax_amount: taxAmount,
         notes: formData.notes,
         status: 'draft'
       })
@@ -73,6 +85,10 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
       toast.success(`Invoice ${invoiceNumber} created!`)
       setIsOpen(false)
       setFormData({ client_id: '', amount: '', notes: '' })
+      setSelectedTaxId(null)
+      setTaxRate(0)
+      setTaxAmount(0)
+      setTotalAmount(0)
       onSuccess()
     }
   }
@@ -116,6 +132,12 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             required
             placeholder="0.00"
+          />
+          
+          <TaxRateSelector
+            selectedTaxId={selectedTaxId}
+            onTaxChange={handleTaxChange}
+            amount={parseFloat(formData.amount) || 0}
           />
           
           <FormInput

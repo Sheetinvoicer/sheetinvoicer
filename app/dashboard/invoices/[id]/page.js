@@ -130,9 +130,10 @@ export default function InvoiceDetailPage({ params }) {
     )
   }
 
-  const subtotal = invoice.subtotal || invoice.total || 0
-  const taxAmount = invoice.tax_amount || 0
+  const subtotal = invoice.subtotal || 0
   const discountAmount = invoice.discount_amount || 0
+  const taxAmount = invoice.tax_amount || 0
+  const taxRate = invoice.tax_rate_percentage || 0
   const total = invoice.total || 0
 
   return (
@@ -181,27 +182,22 @@ export default function InvoiceDetailPage({ params }) {
                 <span>Subtotal:</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
-              
               {discountAmount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount ({invoice.discount_code}):</span>
                   <span>-${discountAmount.toFixed(2)}</span>
                 </div>
               )}
-              
               {taxAmount > 0 && (
                 <div className="flex justify-between">
-                  <span>Tax ({invoice.tax_rate_percentage || 0}%):</span>
+                  <span>Tax ({taxRate}%):</span>
                   <span>${taxAmount.toFixed(2)}</span>
                 </div>
               )}
-              
               <div className="flex justify-between font-semibold pt-2 border-t">
                 <span>Total:</span>
                 <span>${total.toFixed(2)}</span>
               </div>
-              
-              {invoice.notes && <p className="mt-2 pt-2"><strong>Notes:</strong> {invoice.notes}</p>}
             </div>
           </div>
 

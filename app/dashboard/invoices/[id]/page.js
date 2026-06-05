@@ -100,6 +100,11 @@ export default function InvoiceDetailPage({ params }) {
     )
   }
 
+  const subtotal = invoice.subtotal || invoice.total || 0
+  const taxAmount = invoice.tax_amount || 0
+  const discountAmount = invoice.discount_amount || 0
+  const total = invoice.total || 0
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
       <Toaster position="top-right" />
@@ -141,15 +146,30 @@ export default function InvoiceDetailPage({ params }) {
 
           <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
             <h2 className="text-md font-semibold mb-3">Invoice Details</h2>
-            <p><strong>Subtotal:</strong> ${(invoice.subtotal || invoice.total || 0).toFixed(2)}</p>
-            {invoice.discount_amount > 0 && (
-              <p className="text-green-600"><strong>Discount ({invoice.discount_code}):</strong> -${invoice.discount_amount.toFixed(2)}</p>
-            )}
-            <p className="font-semibold pt-1 border-t mt-1"><strong>Total:</strong> ${(invoice.total || 0).toFixed(2)}</p>
-            {invoice.notes && <p className="mt-2"><strong>Notes:</strong> {invoice.notes}</p>}
+            <div className="space-y-2">
+              <p><strong>Subtotal:</strong> ${subtotal.toFixed(2)}</p>
+              
+              {discountAmount > 0 && (
+                <p className="text-green-600"><strong>Discount ({invoice.discount_code}):</strong> -${discountAmount.toFixed(2)}</p>
+              )}
+              
+              {taxAmount > 0 && (
+                <p><strong>Tax ({invoice.tax_rate_percentage || 0}%):</strong> ${taxAmount.toFixed(2)}</p>
+              )}
+              
+              <p className="font-semibold pt-1 border-t mt-1"><strong>Total:</strong> ${total.toFixed(2)}</p>
+              
+              {invoice.notes && <p className="mt-2"><strong>Notes:</strong> {invoice.notes}</p>}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3 pt-4">
+            <Link
+              href={`/dashboard/invoices/${invoice.id}/edit`}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Edit Invoice
+            </Link>
             <button onClick={deleteInvoice} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
               Delete Invoice
             </button>

@@ -54,7 +54,7 @@ export default function InvoicesPage() {
     if (user) {
       const { data } = await supabase
         .from('clients')
-        .select('id, name, email')
+        .select('id, name, email, state')
         .eq('user_id', user.id)
       setClients(data || [])
     }

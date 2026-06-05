@@ -7,18 +7,15 @@ import Button from './Button'
 import FormInput from './FormInput'
 import Modal from './Modal'
 import { generateInvoiceNumber } from '@/lib/invoiceNumber'
-import TaxRateSelector from './TaxRateSelector'
-import DiscountInput from './DiscountInput'
 
 export default function QuickInvoiceForm({ clients, onSuccess }) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [selectedTaxId, setSelectedTaxId] = useState(null)
-  const [taxRate, setTaxRate] = useState(0)
-  const [taxAmount, setTaxAmount] = useState(0)
-  const [totalAmount, setTotalAmount] = useState(0)
+  const [subtotal, setSubtotal] = useState(0)
   const [discountAmount, setDiscountAmount] = useState(0)
-  const [appliedDiscount, setAppliedDiscount] = useState(null)
+  const [discountCode, setDiscountCode] = useState('')
+  const [discountType, setDiscountType] = useState('')
+  const [total, setTotal] = useState(0)
   const [formData, setFormData] = useState({
     client_id: '',
     amount: '',
@@ -26,21 +23,40 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
   })
   const supabase = createClient()
 
-  const handleTaxChange = (taxId, rate, taxAmt, total) => {
-    setSelectedTaxId(taxId)
-    setTaxRate(rate)
-    setTaxAmount(taxAmt)
-    setTotalAmount(total)
+  const applyDiscount = async () => {
+    if (!discountCode.trim()) return
+    
+    const response = await fetch('/api/discount', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: discountCode, subtotal: parseFloat(formData.amount) || 0 }),
+    })
+    
+    const data = await response.json()
+    
+    if (data.success) {
+      setDiscountAmount(parseFloat(data.discountAmount))
+      setTotal(parseFloat(data.total))
+      toast.success(`Discount applied: -$${data.discountAmount}`)
+    } else {
+      toast.error(data.error)
+      setDiscountAmount(0)
+      setTotal(parseFloat(formData.amount) || 0)
+    }
   }
 
-  const handleDiscountApplied = (discountData) => {
-    if (discountData && discountData.success) {
-      setAppliedDiscount(discountData.discount)
-      setDiscountAmount(parseFloat(discountData.discountAmount))
-    } else {
-      setAppliedDiscount(null)
-      setDiscountAmount(0)
-    }
+  const removeDiscount = () => {
+    setDiscountAmount(0)
+    setDiscountCode('')
+    setTotal(parseFloat(formData.amount) || 0)
+    toast.success('Discount removed')
+  }
+
+  const handleAmountChange = (e) => {
+    const amount = parseFloat(e.target.value) || 0
+    setSubtotal(amount)
+    setTotal(amount - discountAmount)
+    setFormData({ ...formData, amount: e.target.value })
   }
 
   const handleSubmit = async () => {
@@ -60,7 +76,6 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
       .maybeSingle()
     
     const planType = profile?.plan?.toLowerCase() || 'free'
-    
     const { count } = await supabase
       .from('invoices')
       .select('*', { count: 'exact', head: true })
@@ -73,8 +88,6 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     }
     
     const invoiceNumber = await generateInvoiceNumber(user.id)
-    const subtotal = parseFloat(formData.amount) || 0
-    const finalTotal = totalAmount > 0 ? totalAmount : subtotal - discountAmount
     
     const { error } = await supabase
       .from('invoices')
@@ -82,13 +95,10 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
         user_id: user.id,
         client_id: formData.client_id,
         invoice_number: invoiceNumber,
-        subtotal: subtotal,
+        subtotal: parseFloat(formData.amount) || 0,
         discount_amount: discountAmount,
-        discount_code_id: appliedDiscount?.id,
-        tax_rate_id: selectedTaxId,
-        tax_rate_percentage: taxRate,
-        tax_amount: taxAmount,
-        total: finalTotal,
+        discount_code: discountCode || null,
+        total: total,
         notes: formData.notes,
         status: 'draft'
       })
@@ -98,15 +108,13 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     if (error) {
       toast.error('Error creating invoice: ' + error.message)
     } else {
-      toast.success(`Invoice ${invoiceNumber} created!`)
+      toast.success(`Invoice ${invoiceNumber} created with ${discountAmount > 0 ? `$${discountAmount} discount!` : ''}`)
       setIsOpen(false)
       setFormData({ client_id: '', amount: '', notes: '' })
-      setSelectedTaxId(null)
-      setTaxRate(0)
-      setTaxAmount(0)
-      setTotalAmount(0)
+      setSubtotal(0)
       setDiscountAmount(0)
-      setAppliedDiscount(null)
+      setDiscountCode('')
+      setTotal(0)
       onSuccess()
     }
   }
@@ -147,22 +155,46 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
             label="Amount"
             type="number"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            onChange={handleAmountChange}
             required
             placeholder="0.00"
           />
           
-          <DiscountInput
-            subtotal={parseFloat(formData.amount) || 0}
-            userId={null}
-            onDiscountApplied={handleDiscountApplied}
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+              placeholder="Discount code (WELCOME10, SAVE20, LAUNCH25)"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+            />
+            <button
+              onClick={applyDiscount}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Apply
+            </button>
+          </div>
           
-          <TaxRateSelector
-            selectedTaxId={selectedTaxId}
-            onTaxChange={handleTaxChange}
-            amount={parseFloat(formData.amount) || 0}
-          />
+          {discountAmount > 0 && (
+            <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Subtotal:</span>
+                <span>${parseFloat(formData.amount || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Discount ({discountCode}):</span>
+                <span>-${discountAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-semibold pt-1 border-t border-green-200">
+                <span>Total:</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              <button onClick={removeDiscount} className="text-xs text-red-500 hover:text-red-700 mt-1">
+                Remove discount
+              </button>
+            </div>
+          )}
           
           <FormInput
             label="Notes (Optional)"
@@ -173,10 +205,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
           />
           
           <div className="text-xs text-gray-500">
-            Invoice number will be auto-generated (e.g., INV-000001)
-          </div>
-          <div className="text-xs text-blue-600">
-            💰 Try discount codes: WELCOME10 (10% off), SAVE20 ($20 off min $100), LAUNCH25 (25% off)
+            💰 Try discount codes: WELCOME10 (10% off), SAVE20 ($20 off), LAUNCH25 (25% off)
           </div>
         </div>
       </Modal>

@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request) {
   try {
-    const { amount, country, state } = await request.json()
+    const body = await request.json()
+    console.log('=== TAX API CALLED ===')
+    console.log('Request body:', body)
+    
+    const { amount, country, state } = body
     
     // Tax rates by state
     const taxRates = {
@@ -27,10 +31,11 @@ export async function POST(request) {
       'MO': 4.225,
     }
     
-    // Default rate if no state (or use 0 for no tax)
     const rate = taxRates[state] || 0
     const taxAmount = (amount * rate) / 100
     const totalAmount = amount + taxAmount
+    
+    console.log(`State: ${state}, Rate: ${rate}%, Tax: ${taxAmount}, Total: ${totalAmount}`)
     
     return NextResponse.json({
       success: true,
@@ -39,7 +44,7 @@ export async function POST(request) {
       taxRate: rate,
     })
   } catch (error) {
-    console.error('Tax calculation error:', error)
+    console.error('Tax error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

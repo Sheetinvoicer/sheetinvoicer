@@ -13,6 +13,7 @@ export default function InvoiceDetailPage({ params }) {
   const [business, setBusiness] = useState(null)
   const [loading, setLoading] = useState(true)
   const [invoiceId, setInvoiceId] = useState(null)
+  const [processingPayment, setProcessingPayment] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
@@ -87,6 +88,35 @@ export default function InvoiceDetailPage({ params }) {
     }
   }
 
+  const handlePayment = async () => {
+    setProcessingPayment(true)
+    try {
+      const response = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoice_number,
+          amount: invoice.total,
+          clientName: invoice.clients?.name,
+          clientEmail: invoice.clients?.email,
+          returnUrl: `${window.location.origin}/dashboard/invoices/${invoice.id}`,
+        }),
+      })
+      
+      const { url } = await response.json()
+      if (url) {
+        window.location.href = url
+      } else {
+        toast.error('Failed to create payment session')
+      }
+    } catch (error) {
+      toast.error('Payment error')
+    } finally {
+      setProcessingPayment(false)
+    }
+  }
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading invoice...</div>
   }
@@ -147,19 +177,31 @@ export default function InvoiceDetailPage({ params }) {
           <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
             <h2 className="text-md font-semibold mb-3">Invoice Details</h2>
             <div className="space-y-2">
-              <p><strong>Subtotal:</strong> ${subtotal.toFixed(2)}</p>
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
               
               {discountAmount > 0 && (
-                <p className="text-green-600"><strong>Discount ({invoice.discount_code}):</strong> -${discountAmount.toFixed(2)}</p>
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({invoice.discount_code}):</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
               )}
               
               {taxAmount > 0 && (
-                <p><strong>Tax ({invoice.tax_rate_percentage || 0}%):</strong> ${taxAmount.toFixed(2)}</p>
+                <div className="flex justify-between">
+                  <span>Tax ({invoice.tax_rate_percentage || 0}%):</span>
+                  <span>${taxAmount.toFixed(2)}</span>
+                </div>
               )}
               
-              <p className="font-semibold pt-1 border-t mt-1"><strong>Total:</strong> ${total.toFixed(2)}</p>
+              <div className="flex justify-between font-semibold pt-2 border-t">
+                <span>Total:</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
               
-              {invoice.notes && <p className="mt-2"><strong>Notes:</strong> {invoice.notes}</p>}
+              {invoice.notes && <p className="mt-2 pt-2"><strong>Notes:</strong> {invoice.notes}</p>}
             </div>
           </div>
 
@@ -180,6 +222,15 @@ export default function InvoiceDetailPage({ params }) {
             >
               {({ loading }) => (loading ? 'Generating...' : 'Download PDF')}
             </PDFDownloadLink>
+            {invoice.status !== 'paid' && (
+              <button
+                onClick={handlePayment}
+                disabled={processingPayment}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {processingPayment ? 'Processing...' : 'Pay Now 💳'}
+              </button>
+            )}
           </div>
         </div>
       </div>

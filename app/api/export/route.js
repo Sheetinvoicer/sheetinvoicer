@@ -12,7 +12,6 @@ export async function GET(request) {
       return new NextResponse('Missing userId or type', { status: 400 })
     }
     
-    let data = []
     let headers = []
     let rows = []
     
@@ -23,9 +22,8 @@ export async function GET(request) {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
       
-      data = invoices || []
       headers = ['Invoice Number', 'Client', 'Client Email', 'Date', 'Amount', 'Status']
-      rows = data.map(inv => [
+      rows = (invoices || []).map(inv => [
         inv.invoice_number,
         inv.clients?.name || '',
         inv.clients?.email || '',
@@ -37,13 +35,12 @@ export async function GET(request) {
     else if (type === 'clients') {
       const { data: clients } = await supabase
         .from('clients')
-       select('name, email, phone, address, city, state, zip, country')
+        .select('name, email, phone, address, city, state, zip, country')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
       
-      data = clients || []
       headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'State', 'Zip', 'Country']
-      rows = data.map(c => [
+      rows = (clients || []).map(c => [
         c.name,
         c.email,
         c.phone || '',
@@ -61,9 +58,8 @@ export async function GET(request) {
         .eq('user_id', userId)
         .order('date', { ascending: false })
       
-      data = expenses || []
       headers = ['Date', 'Category', 'Description', 'Amount', 'Tax Deductible']
-      rows = data.map(e => [
+      rows = (expenses || []).map(e => [
         new Date(e.date).toLocaleDateString(),
         e.category,
         e.description || '',

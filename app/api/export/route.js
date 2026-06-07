@@ -18,7 +18,7 @@ export async function GET(request) {
     if (type === 'clients') {
       const { data: clients, error } = await supabase
         .from('clients')
-        .select('name, email, phone, address, city, state, zip, country')
+        .select('name, email, phone, address, city, state, zip_code, country')
         .eq('user_id', userId)
         .order('name', { ascending: true })
       
@@ -65,7 +65,7 @@ export async function GET(request) {
           else if (header === 'Address') value = item.address || ''
           else if (header === 'City') value = item.city || ''
           else if (header === 'State') value = item.state || ''
-          else if (header === 'Zip') value = item.zip || ''
+          else if (header === 'Zip') value = item.zip_code || ''
           else if (header === 'Country') value = item.country || ''
         }
         else if (type === 'invoices') {

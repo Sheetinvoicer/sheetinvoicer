@@ -6,20 +6,32 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET(request) {
   try {
-    // Verify cron secret
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const expectedSecret = process.env.CRON_SECRET
+    
+    // Debug logging
+    console.log('Auth header exists:', !!authHeader)
+    console.log('Expected secret exists:', !!expectedSecret)
+    console.log('Auth header preview:', authHeader ? authHeader.substring(0, 15) + '...' : 'none')
+    console.log('Expected secret preview:', expectedSecret ? expectedSecret.substring(0, 10) + '...' : 'none')
+    
+    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
+      return NextResponse.json({ 
+        error: 'Unauthorized',
+        debug: {
+          hasAuth: !!authHeader,
+          hasSecret: !!expectedSecret
+        }
+      }, { status: 401 })
     }
     
     const supabase = await createClient()
     const today = new Date()
     let remindersSent = 0
     
-    // Get all invoices that are sent but not paid
     const { data: invoices } = await supabase
       .from('invoices')
-      .select('*, clients(*), users!inner(email, user_profiles(plan))')
+      .select('*, clients(*), users!inner(email)')
       .eq('status', 'sent')
       .not('paid', 'eq', true)
     
@@ -31,19 +43,16 @@ export async function GET(request) {
       let reminderType = null
       let daysValue = 0
       
-      // Check for due soon reminders (3 days before)
       if (daysUntilDue === 3) {
         reminderType = 'due_soon'
         daysValue = 3
       }
-      // Check for overdue reminders (1, 3, 7, 14, 30 days)
       else if ([1, 3, 7, 14, 30].includes(daysOverdue)) {
         reminderType = 'overdue'
         daysValue = daysOverdue
       }
       
       if (reminderType) {
-        // Send email
         await resend.emails.send({
           from: 'SheetInvoicer <reminders@sheetinvoicer.com>',
           to: [invoice.clients.email],

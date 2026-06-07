@@ -42,6 +42,9 @@ export default function SubscriptionPage() {
   ]
 
   const handleSubscribe = async (plan) => {
+    console.log('Subscribe clicked for plan:', plan.id)
+    console.log('Price ID:', plan.priceId)
+    
     if (plan.id === 'free') {
       toast.success('You are on the Free plan!')
       return
@@ -49,12 +52,14 @@ export default function SubscriptionPage() {
     
     if (!plan.priceId) {
       toast.error('Subscription not configured. Missing price ID.')
+      console.error('Missing price ID for plan:', plan.id)
       return
     }
     
     setLoading(plan.id)
     
     try {
+      console.log('Sending request to /api/stripe/create-subscription')
       const response = await fetch('/api/stripe/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,12 +71,15 @@ export default function SubscriptionPage() {
       })
       
       const data = await response.json()
+      console.log('Response:', data)
+      
       if (data.url) {
         window.location.href = data.url
       } else {
         toast.error(data.error || 'Failed to create subscription')
       }
     } catch (error) {
+      console.error('Subscription error:', error)
       toast.error('Error processing subscription')
     } finally {
       setLoading(null)

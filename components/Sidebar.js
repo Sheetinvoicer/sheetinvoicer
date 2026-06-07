@@ -32,6 +32,7 @@ export default function Sidebar() {
     { name: 'Expenses', href: '/dashboard/expenses', icon: '💰' },
     { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
     { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+    { name: 'Reminders', href: '/dashboard/settings/reminders', icon: '🔔' },
     { name: 'Subscription', href: '/dashboard/subscription', icon: '💳' },
   ]
 

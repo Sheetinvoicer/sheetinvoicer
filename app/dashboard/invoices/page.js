@@ -1,12 +1,12 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import MultiInvoicePDF from '@/components/MultiInvoicePDF'
 import InvoiceFilter from '@/components/InvoiceFilter'
 import QuickInvoiceForm from '@/components/QuickInvoiceForm'
+import { Download } from 'lucide-react'
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([])
@@ -60,138 +60,57 @@ export default function InvoicesPage() {
     }
   }
 
-  const handleFilter = (filters) => {
-    let filtered = [...invoices]
-    
-    if (filters.status) {
-      filtered = filtered.filter(inv => inv.status === filters.status)
-    }
-    if (filters.dateFrom) {
-      filtered = filtered.filter(inv => new Date(inv.created_at) >= new Date(filters.dateFrom))
-    }
-    if (filters.dateTo) {
-      filtered = filtered.filter(inv => new Date(inv.created_at) <= new Date(filters.dateTo))
-    }
-    if (filters.minAmount) {
-      filtered = filtered.filter(inv => inv.total >= parseFloat(filters.minAmount))
-    }
-    if (filters.maxAmount) {
-      filtered = filtered.filter(inv => inv.total <= parseFloat(filters.maxAmount))
-    }
-    
-    setFilteredInvoices(filtered)
+  const exportCSV = async () => {
+    const response = await fetch(`/api/export?userId=${await supabase.auth.getUser().then(res => res.data.user?.id)}&type=invoices`)
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `invoices_export_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
   }
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'sent': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
+  if (loading) return <div className="p-6">Loading invoices...</div>
 
   return (
-    <div>
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Invoices</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage and send invoices</p>
+          <h1 className="text-2xl font-bold">Invoices</h1>
+          <p className="text-gray-500">Manage and send invoices</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {clients.length > 0 && (
-            <QuickInvoiceForm clients={clients} onSuccess={loadInvoices} />
-          )}
-          {invoices.length > 0 && business && (
-            <PDFDownloadLink
-              document={<MultiInvoicePDF invoices={filteredInvoices} business={business} />}
-              fileName={`invoices-${new Date().toISOString().split('T')[0]}.pdf`}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-            >
-              {({ loading }) => loading ? 'Generating...' : '📄 Download All'}
-            </PDFDownloadLink>
-          )}
-          <Link
-            href="/dashboard/invoices/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            + New Invoice
-          </Link>
+        <div className="flex gap-2">
+          {clients.length > 0 && <QuickInvoiceForm clients={clients} onSuccess={loadInvoices} />}
+          <button onClick={exportCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <Download size={18} /> Export CSV
+          </button>
         </div>
       </div>
 
-      <InvoiceFilter onFilter={handleFilter} />
-
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading...</div>
-      ) : filteredInvoices.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-12 text-center border border-gray-100 dark:border-gray-700">
-          <span className="text-6xl mb-4 block">📄</span>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No invoices yet</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">Create your first invoice by uploading a CSV</p>
-          <Link
-            href="/dashboard/invoices/new"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Create Invoice
-          </Link>
+      {invoices.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <p className="text-gray-500">No invoices yet</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
-                <tr>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Invoice #</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Client</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Amount</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Status</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Date</th>
-                  <th className="text-left p-4 text-gray-700 dark:text-gray-300 font-medium">Actions</th>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr><th className="px-4 py-3 text-left">Number</th><th className="px-4 py-3 text-left">Client</th><th className="px-4 py-3 text-left">Date</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Status</th><th className="px-4 py-3 text-center">Actions</th></tr>
+            </thead>
+            <tbody>
+              {filteredInvoices.map((invoice) => (
+                <tr key={invoice.id} className="border-t hover:bg-gray-50">
+                  <td className="px-4 py-3">{invoice.invoice_number}</td>
+                  <td className="px-4 py-3">{invoice.clients?.name}</td>
+                  <td className="px-4 py-3">{new Date(invoice.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-right font-semibold">${invoice.total?.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-center"><span className={`px-2 py-1 rounded-full text-xs ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' : invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`}>{invoice.status || 'draft'}</span></td>
+                  <td className="px-4 py-3 text-center"><a href={`/dashboard/invoices/${invoice.id}`} className="text-blue-600 hover:underline">View</a></td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900">
-                    <td className="p-4">
-                      <Link 
-                        href={`/dashboard/invoices/${invoice.id}`} 
-                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                      >
-                        {invoice.invoice_number}
-                      </Link>
-                    </td>
-                    <td className="p-4">
-                      <div className="font-medium text-gray-900 dark:text-white">{invoice.clients?.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{invoice.clients?.email}</div>
-                    </td>
-                    <td className="p-4 text-gray-900 dark:text-white">${Number(invoice.total).toLocaleString()}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)} dark:${invoice.status === 'paid' ? 'bg-green-900 text-green-300' : invoice.status === 'sent' ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-300'}`}>
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-600 dark:text-gray-400">
-                      {new Date(invoice.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="p-4">
-                      <Link
-                        href={`/dashboard/invoices/${invoice.id}`}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 mr-3"
-                      >
-                        View
-                      </Link>
-                      <Link
-                        href={`/dashboard/invoices/${invoice.id}/edit`}
-                        className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

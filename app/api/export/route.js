@@ -9,70 +9,81 @@ export async function GET(request) {
     const type = searchParams.get('type')
     
     if (!userId || !type) {
-      return new NextResponse('Missing userId or type', { status: 400 })
+      return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
     }
     
+    let data = []
     let headers = []
-    let rows = []
     
-    if (type === 'invoices') {
-      const { data: invoices } = await supabase
-        .from('invoices')
-        .select('invoice_number, created_at, total, status, clients(name, email)')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-      
-      headers = ['Invoice Number', 'Client', 'Client Email', 'Date', 'Amount', 'Status']
-      rows = (invoices || []).map(inv => [
-        inv.invoice_number,
-        inv.clients?.name || '',
-        inv.clients?.email || '',
-        new Date(inv.created_at).toLocaleDateString(),
-        inv.total,
-        inv.status
-      ])
-    } 
-    else if (type === 'clients') {
-      const { data: clients } = await supabase
+    if (type === 'clients') {
+      const { data: clients, error } = await supabase
         .from('clients')
         .select('name, email, phone, address, city, state, zip, country')
         .eq('user_id', userId)
+        .order('name', { ascending: true })
+      
+      if (error) throw error
+      
+      data = clients || []
+      headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'State', 'Zip', 'Country']
+    }
+    else if (type === 'invoices') {
+      const { data: invoices, error } = await supabase
+        .from('invoices')
+        .select('invoice_number, created_at, total, status')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
       
-      headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'State', 'Zip', 'Country']
-      rows = (clients || []).map(c => [
-        c.name,
-        c.email,
-        c.phone || '',
-        c.address || '',
-        c.city || '',
-        c.state || '',
-        c.zip || '',
-        c.country || ''
-      ])
+      if (error) throw error
+      
+      data = invoices || []
+      headers = ['Invoice Number', 'Date', 'Amount', 'Status']
     }
     else if (type === 'expenses') {
-      const { data: expenses } = await supabase
+      const { data: expenses, error } = await supabase
         .from('expenses')
         .select('date, category, description, amount, is_deductible')
         .eq('user_id', userId)
         .order('date', { ascending: false })
       
+      if (error) throw error
+      
+      data = expenses || []
       headers = ['Date', 'Category', 'Description', 'Amount', 'Tax Deductible']
-      rows = (expenses || []).map(e => [
-        new Date(e.date).toLocaleDateString(),
-        e.category,
-        e.description || '',
-        e.amount,
-        e.is_deductible ? 'Yes' : 'No'
-      ])
     }
     
     // Build CSV
     let csvContent = headers.join(',') + '\n'
-    for (const row of rows) {
-      const escapedRow = row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-      csvContent += escapedRow + '\n'
+    
+    for (const item of data) {
+      const row = headers.map(header => {
+        let value = ''
+        if (type === 'clients') {
+          if (header === 'Name') value = item.name
+          else if (header === 'Email') value = item.email
+          else if (header === 'Phone') value = item.phone || ''
+          else if (header === 'Address') value = item.address || ''
+          else if (header === 'City') value = item.city || ''
+          else if (header === 'State') value = item.state || ''
+          else if (header === 'Zip') value = item.zip || ''
+          else if (header === 'Country') value = item.country || ''
+        }
+        else if (type === 'invoices') {
+          if (header === 'Invoice Number') value = item.invoice_number
+          else if (header === 'Date') value = new Date(item.created_at).toLocaleDateString()
+          else if (header === 'Amount') value = item.total
+          else if (header === 'Status') value = item.status
+        }
+        else if (type === 'expenses') {
+          if (header === 'Date') value = new Date(item.date).toLocaleDateString()
+          else if (header === 'Category') value = item.category
+          else if (header === 'Description') value = item.description || ''
+          else if (header === 'Amount') value = item.amount
+          else if (header === 'Tax Deductible') value = item.is_deductible ? 'Yes' : 'No'
+        }
+        return `"${String(value).replace(/"/g, '""')}"`
+      }).join(',')
+      csvContent += row + '\n'
     }
     
     return new NextResponse(csvContent, {
@@ -83,6 +94,6 @@ export async function GET(request) {
     })
   } catch (error) {
     console.error('Export error:', error)
-    return new NextResponse(`Error: ${error.message}`, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

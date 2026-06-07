@@ -5,83 +5,48 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET(request) {
-  // Verify cron secret (for security)
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const supabase = await createClient()
-  const today = new Date()
-  const remindersSent = []
-
   try {
-    // Get overdue invoices (due_date < today AND status not paid)
-    const { data: overdueInvoices } = await supabase
+    const authHeader = request.headers.get('authorization')
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const supabase = createClient()
+    
+    // Get invoices that need reminders
+    const today = new Date()
+    const { data: invoices } = await supabase
       .from('invoices')
-      .select('*, clients(*)')
-      .lt('due_date', today.toISOString().split('T')[0])
-      .neq('status', 'paid')
-      .neq('status', 'overdue')
-
-    for (const invoice of overdueInvoices || []) {
-      // Check if reminder already sent for this invoice
-      const { data: existingReminder } = await supabase
-        .from('reminder_logs')
-        .select('id')
-        .eq('invoice_id', invoice.id)
-        .eq('reminder_type', 'overdue')
-        .single()
-
-      if (!existingReminder) {
-        // Send reminder email
-        const reminderHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #dc2626;">Payment Reminder</h2>
-            <p>Dear ${invoice.clients?.name},</p>
-            <p>This is a reminder that invoice <strong>${invoice.invoice_number}</strong> is now overdue.</p>
-            <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Amount Due:</strong> $${invoice.total?.toLocaleString()}</p>
-              <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
-              <p><strong>Status:</strong> Overdue</p>
-            </div>
-            <a href="https://sheetinvoicer.vercel.app/pay/${invoice.id}" style="background-color: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Pay Now</a>
-            <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">Please arrange payment at your earliest convenience.</p>
-          </div>
-        `
-
-        const { error } = await resend.emails.send({
+      .select('*, clients(*), users!inner(email)')
+      .eq('status', 'sent')
+      .lt('due_date', today.toISOString())
+      .not('reminder_sent', 'is', null)
+    
+    for (const invoice of invoices || []) {
+      const daysOverdue = Math.floor((today - new Date(invoice.due_date)) / (1000 * 60 * 60 * 24))
+      
+      // Check if reminder should be sent for this overdue period
+      const reminderDays = [1, 3, 7, 14, 30]
+      if (reminderDays.includes(daysOverdue)) {
+        await resend.emails.send({
           from: 'SheetInvoicer <reminders@sheetinvoicer.com>',
-          to: [invoice.clients?.email],
-          subject: `Payment Reminder: Invoice ${invoice.invoice_number} is Overdue`,
-          html: reminderHtml,
+          to: [invoice.clients.email],
+          subject: `Payment Reminder: Invoice ${invoice.invoice_number} is ${daysOverdue} days overdue`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px;">
+              <h2>Payment Reminder</h2>
+              <p>Dear ${invoice.clients.name},</p>
+              <p>This is a reminder that invoice <strong>${invoice.invoice_number}</strong> for <strong>$${invoice.total}</strong> is ${daysOverdue} days overdue.</p>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/pay/${invoice.id}" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px;">Pay Now</a>
+              <p>Thank you for your prompt payment.</p>
+            </div>
+          `,
         })
-
-        if (!error) {
-          // Log reminder
-          await supabase.from('reminder_logs').insert({
-            invoice_id: invoice.id,
-            reminder_type: 'overdue',
-          })
-          
-          // Update invoice status to overdue
-          await supabase
-            .from('invoices')
-            .update({ status: 'overdue' })
-            .eq('id', invoice.id)
-          
-          remindersSent.push(invoice.invoice_number)
-        }
       }
     }
-
-    return NextResponse.json({ 
-      success: true, 
-      remindersSent,
-      count: remindersSent.length 
-    })
+    
+    return NextResponse.json({ success: true, sent: invoices?.length || 0 })
   } catch (error) {
-    console.error('Reminder error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

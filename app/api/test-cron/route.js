@@ -4,21 +4,24 @@ export async function GET() {
   try {
     const cronSecret = process.env.CRON_SECRET
     
-    // Get the first 10 chars for debugging (don't expose full secret)
-    const secretPreview = cronSecret ? cronSecret.substring(0, 10) + '...' : 'undefined'
+    // Make sure the secret is a string
+    const secret = String(cronSecret || '').trim()
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/cron/send-reminders`, {
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${cronSecret}`
+        'Authorization': `Bearer ${secret}`,
+        'Content-Type': 'application/json'
       }
     })
+    
     const data = await response.json()
     
     return NextResponse.json({ 
       success: true, 
       cronResult: data,
-      cronSecretPreview: secretPreview,
-      cronSecretExists: !!cronSecret
+      secretLength: secret.length,
+      hasSecret: secret.length > 0
     })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

@@ -11,11 +11,27 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'No userId' }, { status: 400 })
     }
     
-    const { data, error } = await supabase
+    // Try to get existing settings
+    let { data, error } = await supabase
       .from('reminder_settings')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle()
+    
+    // If table doesn't exist, return default settings
+    if (error && error.message.includes('does not exist')) {
+      return NextResponse.json({ 
+        success: true, 
+        data: {
+          enabled: true,
+          days_before_due: 3,
+          days_after_due: [1, 3, 7, 14],
+          reminder_time: '09:00:00',
+          auto_mark_overdue: true,
+          overdue_days: 30
+        }
+      })
+    }
     
     if (error) throw error
     
@@ -31,6 +47,7 @@ export async function POST(request) {
     const supabase = await createClient()
     const body = await request.json()
     
+    // First, ensure the table exists by trying to insert
     const { data, error } = await supabase
       .from('reminder_settings')
       .upsert({

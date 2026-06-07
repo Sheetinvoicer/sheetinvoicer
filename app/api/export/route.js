@@ -3,70 +3,90 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const type = searchParams.get('type')
     
+    if (!userId || !type) {
+      return new NextResponse('Missing userId or type', { status: 400 })
+    }
+    
     let data = []
     let headers = []
+    let rows = []
     
     if (type === 'invoices') {
       const { data: invoices } = await supabase
         .from('invoices')
-        .select('*, clients(name, email)')
+        .select('invoice_number, created_at, total, status, clients(name, email)')
         .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      
       data = invoices || []
-      headers = ['Invoice Number', 'Client', 'Date', 'Total', 'Status']
-    } else if (type === 'clients') {
+      headers = ['Invoice Number', 'Client', 'Client Email', 'Date', 'Amount', 'Status']
+      rows = data.map(inv => [
+        inv.invoice_number,
+        inv.clients?.name || '',
+        inv.clients?.email || '',
+        new Date(inv.created_at).toLocaleDateString(),
+        inv.total,
+        inv.status
+      ])
+    } 
+    else if (type === 'clients') {
       const { data: clients } = await supabase
         .from('clients')
-        .select('*')
+       select('name, email, phone, address, city, state, zip, country')
         .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      
       data = clients || []
-      headers = ['Name', 'Email', 'Phone', 'Address']
-    } else if (type === 'expenses') {
+      headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'State', 'Zip', 'Country']
+      rows = data.map(c => [
+        c.name,
+        c.email,
+        c.phone || '',
+        c.address || '',
+        c.city || '',
+        c.state || '',
+        c.zip || '',
+        c.country || ''
+      ])
+    }
+    else if (type === 'expenses') {
       const { data: expenses } = await supabase
         .from('expenses')
-        .select('*')
+        .select('date, category, description, amount, is_deductible')
         .eq('user_id', userId)
+        .order('date', { ascending: false })
+      
       data = expenses || []
-      headers = ['Date', 'Category', 'Description', 'Amount']
+      headers = ['Date', 'Category', 'Description', 'Amount', 'Tax Deductible']
+      rows = data.map(e => [
+        new Date(e.date).toLocaleDateString(),
+        e.category,
+        e.description || '',
+        e.amount,
+        e.is_deductible ? 'Yes' : 'No'
+      ])
     }
     
+    // Build CSV
     let csvContent = headers.join(',') + '\n'
-    
-    for (const row of data) {
-      const values = headers.map(h => {
-        if (type === 'invoices') {
-          if (h === 'Invoice Number') return row.invoice_number
-          if (h === 'Client') return row.clients?.name
-          if (h === 'Date') return new Date(row.created_at).toLocaleDateString()
-          if (h === 'Total') return row.total
-          if (h === 'Status') return row.status
-        } else if (type === 'clients') {
-          if (h === 'Name') return row.name
-          if (h === 'Email') return row.email
-          if (h === 'Phone') return row.phone || ''
-          if (h === 'Address') return row.address || ''
-        } else if (type === 'expenses') {
-          if (h === 'Date') return new Date(row.date).toLocaleDateString()
-          if (h === 'Category') return row.category
-          if (h === 'Description') return row.description || ''
-          if (h === 'Amount') return row.amount
-        }
-        return ''
-      }).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
-      csvContent += values + '\n'
+    for (const row of rows) {
+      const escapedRow = row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      csvContent += escapedRow + '\n'
     }
     
     return new NextResponse(csvContent, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename=${type}_export.csv`,
+        'Content-Disposition': `attachment; filename=${type}_export_${new Date().toISOString().split('T')[0]}.csv`,
       },
     })
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    console.error('Export error:', error)
+    return new NextResponse(`Error: ${error.message}`, { status: 500 })
   }
 }

@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"], display: 'swap' });
 export const metadata: Metadata = {
   title: "SheetInvoicer",
   description: "Professional invoicing made simple",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -21,6 +22,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes, viewport-fit=cover" />
         <meta name="theme-color" content="#3b82f6" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={inter.className}>
         <ThemeProvider>

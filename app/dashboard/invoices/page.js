@@ -157,7 +157,7 @@ export default function InvoicesPage() {
                   </tr>
                 ))}
               </tbody>
-            <table>
+            </table>
           </div>
           {invoices.length > 0 && business && (
             <div className="p-4 border-t">

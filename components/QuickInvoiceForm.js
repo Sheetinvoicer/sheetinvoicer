@@ -8,7 +8,7 @@ import FormInput from './FormInput'
 import Modal from './Modal'
 import { generateInvoiceNumber } from '@/lib/invoiceNumber'
 
-// Exchange rates (USD base)
+// Exchange rates (1 USD = X foreign currency)
 const EXCHANGE_RATES = {
   USD: 1,
   EUR: 0.92,
@@ -47,6 +47,17 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
   })
   const supabase = createClient()
 
+  const getConvertedAmounts = (amount, currencyCode) => {
+    const amountInSelectedCurrency = parseFloat(amount) || 0
+    const rate = EXCHANGE_RATES[currencyCode] || 1
+    const amountInUSD = amountInSelectedCurrency / rate
+    return {
+      selectedCurrencyAmount: amountInSelectedCurrency,
+      usdAmount: amountInUSD,
+      rate: rate
+    }
+  }
+
   const handleSubmit = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -58,11 +69,8 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     }
     
     const invoiceNumber = await generateInvoiceNumber(user.id)
-    const amountInSelectedCurrency = parseFloat(formData.amount) || 0
-    
-    // Convert to USD using exchange rate
-    const rate = EXCHANGE_RATES[currency]
-    const amountInUSD = amountInSelectedCurrency / rate
+    const amount = parseFloat(formData.amount) || 0
+    const { selectedCurrencyAmount, usdAmount, rate } = getConvertedAmounts(amount, currency)
     
     const { error } = await supabase
       .from('invoices')
@@ -70,11 +78,11 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
         user_id: user.id,
         client_id: formData.client_id,
         invoice_number: invoiceNumber,
-        subtotal: amountInSelectedCurrency,
-        total: amountInSelectedCurrency,
+        subtotal: selectedCurrencyAmount,
+        total: selectedCurrencyAmount,
         currency: currency,
         exchange_rate: rate,
-        base_currency_total: amountInUSD,
+        base_currency_total: usdAmount,
         due_date: formData.due_date || null,
         notes: formData.notes,
         status: 'draft'
@@ -85,7 +93,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     if (error) {
       toast.error('Error creating invoice: ' + error.message)
     } else {
-      toast.success(`Invoice ${invoiceNumber} created in ${currency}! (≈ $${amountInUSD.toFixed(2)} USD)`)
+      toast.success(`Invoice ${invoiceNumber} created in ${currency}!`)
       setIsOpen(false)
       setFormData({ client_id: '', amount: '', due_date: '', notes: '' })
       setCurrency('USD')
@@ -93,10 +101,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     }
   }
 
-  const getSymbol = (code) => {
-    const c = CURRENCIES.find(c => c.code === code)
-    return c?.symbol || '$'
-  }
+  const selectedCurrency = CURRENCIES.find(c => c.code === currency)
 
   return (
     <>
@@ -144,7 +149,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
               </select>
             </div>
             <FormInput
-              label="Amount"
+              label={`Amount (${selectedCurrency?.symbol || '$'})`}
               type="number"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -168,8 +173,14 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
             placeholder="Invoice notes..."
           />
           
+          {formData.amount && currency !== 'USD' && (
+            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
+              ≈ ${(parseFloat(formData.amount) / EXCHANGE_RATES[currency]).toFixed(2)} USD
+            </div>
+          )}
+          
           <div className="text-xs text-gray-500">
-            💰 Invoice number auto-generated. Amount saved in {currency} (≈ {getSymbol(currency)}{(parseFloat(formData.amount) / EXCHANGE_RATES[currency]).toFixed(2)} USD)
+            💰 Invoice number will be auto-generated (e.g., INV-000001)
           </div>
         </div>
       </Modal>

@@ -14,6 +14,7 @@ export async function GET() {
       .from('clients')
       .select('*')
       .eq('user_id', user.id)
+      .order('name')
     
     if (error) throw error
     

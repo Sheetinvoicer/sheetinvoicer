@@ -32,35 +32,68 @@ export default function Sidebar() {
     { name: 'Expenses', href: '/dashboard/expenses', icon: '💰' },
     { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
     { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+    { name: 'Currency', href: '/dashboard/settings/currency', icon: '💱' },
     { name: 'Reminders', href: '/dashboard/settings/reminders', icon: '🔔' },
     { name: 'Subscription', href: '/dashboard/subscription', icon: '💳' },
   ]
 
   return (
     <>
-      <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg">☰</button>
-      <div className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-all duration-300 ${mobileOpen ? 'left-0' : '-left-72 lg:left-0'}`}>
-        <div className="mb-8"><Logo /></div>
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+      >
+        ☰
+      </button>
+
+      <div className={`fixed lg:relative z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 min-h-screen p-6 transition-all duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="mb-8">
+          <Logo />
+        </div>
+        
         <nav className="space-y-1">
           {navItems.map((item) => (
-            <Link key={item.name} href={item.href} onClick={() => setMobileOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === item.href ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                pathname === item.href
+                  ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
               <span className="text-xl">{item.icon}</span>
               <span>{item.name}</span>
             </Link>
           ))}
         </nav>
+
         <div className="absolute bottom-6 left-6 right-6 space-y-2">
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+          >
             <span className="text-xl">{mounted && (theme === 'dark' ? '☀️' : '🌙')}</span>
             <span>{mounted && (theme === 'dark' ? 'Light Mode' : 'Dark Mode')}</span>
           </button>
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+          >
             <span className="text-xl">🚪</span>
             <span>Logout</span>
           </button>
         </div>
       </div>
-      {mobileOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setMobileOpen(false)} />}
+
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
     </>
   )
 }

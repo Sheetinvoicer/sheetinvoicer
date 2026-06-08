@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast, { Toaster } from 'react-hot-toast'
 import Button from './Button'
 import FormInput from './FormInput'
 import Modal from './Modal'
 import { generateInvoiceNumber } from '@/lib/invoiceNumber'
+import CurrencySelector from './CurrencySelector'
 
 export default function QuickInvoiceForm({ clients, onSuccess }) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [currency, setCurrency] = useState('USD')
   const [formData, setFormData] = useState({
     client_id: '',
     amount: '',
@@ -18,6 +20,24 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     notes: ''
   })
   const supabase = createClient()
+
+  useEffect(() => {
+    loadUserCurrency()
+  }, [])
+
+  const loadUserCurrency = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data } = await supabase
+        .from('user_currency_settings')
+        .select('default_currency')
+        .eq('user_id', user.id)
+        .single()
+      if (data?.default_currency) {
+        setCurrency(data.default_currency)
+      }
+    }
+  }
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -48,6 +68,12 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     }
     
     const invoiceNumber = await generateInvoiceNumber(user.id)
+    const amount = parseFloat(formData.amount) || 0
+    
+    // Get exchange rate
+    const currencies = { USD: 1, EUR: 0.92, GBP: 0.78, CAD: 1.36, AUD: 1.51, JPY: 148.5, CNY: 7.25, INR: 83.5, BRL: 5.15, AED: 3.67 }
+    const rate = currencies[currency] || 1
+    const usdAmount = amount / rate
     
     const { error } = await supabase
       .from('invoices')
@@ -55,8 +81,11 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
         user_id: user.id,
         client_id: formData.client_id,
         invoice_number: invoiceNumber,
-        total: parseFloat(formData.amount),
-        subtotal: parseFloat(formData.amount),
+        subtotal: amount,
+        total: amount,
+        currency: currency,
+        exchange_rate: rate,
+        base_currency_total: usdAmount,
         due_date: formData.due_date || null,
         notes: formData.notes,
         status: 'draft'
@@ -67,7 +96,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
     if (error) {
       toast.error('Error creating invoice: ' + error.message)
     } else {
-      toast.success(`Invoice ${invoiceNumber} created!`)
+      toast.success(`Invoice ${invoiceNumber} created in ${currency}!`)
       setIsOpen(false)
       setFormData({ client_id: '', amount: '', due_date: '', notes: '' })
       onSuccess()
@@ -115,12 +144,17 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
             placeholder="0.00"
           />
           
+          <CurrencySelector
+            value={currency}
+            onChange={setCurrency}
+            amount={parseFloat(formData.amount) || 0}
+          />
+          
           <FormInput
             label="Due Date"
             type="date"
             value={formData.due_date}
             onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-            placeholder="YYYY-MM-DD"
           />
           
           <FormInput
@@ -132,7 +166,7 @@ export default function QuickInvoiceForm({ clients, onSuccess }) {
           />
           
           <div className="text-xs text-gray-500">
-            Invoice number will be auto-generated (e.g., INV-000001)
+            💰 Invoice number will be auto-generated (e.g., INV-000001)
           </div>
         </div>
       </Modal>

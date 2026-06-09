@@ -8,6 +8,24 @@ import { PDFDownloadLink } from '@react-pdf/renderer'
 import InvoicePDF from '@/components/pdf/InvoicePDF'
 import toast, { Toaster } from 'react-hot-toast'
 
+const CURRENCY_SYMBOLS = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  CAD: 'C$',
+  AUD: 'A$',
+  JPY: '¥',
+  CNY: '¥',
+  INR: '₹',
+  BRL: 'R$',
+  AED: 'د.إ'
+};
+
+function formatCurrency(amount, currency) {
+  const symbol = CURRENCY_SYMBOLS[currency] || '$';
+  return `${symbol} ${Number(amount).toFixed(2)}`;
+}
+
 export default function InvoiceDetailPage({ params }) {
   const [invoice, setInvoice] = useState(null)
   const [business, setBusiness] = useState(null)
@@ -117,6 +135,35 @@ export default function InvoiceDetailPage({ params }) {
     }
   }
 
+  const sendPortalLink = async () => {
+    try {
+      toast.loading('Sending portal link...', { id: 'portal' })
+      
+      const response = await fetch('/api/invoices/send-magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          clientEmail: invoice.clients?.email,
+          clientName: invoice.clients?.name,
+          invoiceNumber: invoice.invoice_number,
+          amount: invoice.total,
+          currency: invoice.currency || 'USD'
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        toast.success(`✅ Portal link sent to ${invoice.clients?.email}!`, { id: 'portal' })
+      } else {
+        toast.error(`❌ Failed: ${data.error}`, { id: 'portal' })
+      }
+    } catch (error) {
+      toast.error(`❌ Error: ${error.message}`, { id: 'portal' })
+    }
+  }
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading invoice...</div>
   }
@@ -135,6 +182,7 @@ export default function InvoiceDetailPage({ params }) {
   const taxAmount = invoice.tax_amount || 0
   const taxRate = invoice.tax_rate_percentage || 0
   const total = invoice.total || 0
+  const currency = invoice.currency || 'USD'
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
@@ -180,23 +228,23 @@ export default function InvoiceDetailPage({ params }) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatCurrency(subtotal, currency)}</span>
               </div>
               {discountAmount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount ({invoice.discount_code}):</span>
-                  <span>-${discountAmount.toFixed(2)}</span>
+                  <span>-{formatCurrency(discountAmount, currency)}</span>
                 </div>
               )}
               {taxAmount > 0 && (
                 <div className="flex justify-between">
                   <span>Tax ({taxRate}%):</span>
-                  <span>${taxAmount.toFixed(2)}</span>
+                  <span>{formatCurrency(taxAmount, currency)}</span>
                 </div>
               )}
               <div className="flex justify-between font-semibold pt-2 border-t">
                 <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
+                <span className="text-xl">{formatCurrency(total, currency)}</span>
               </div>
             </div>
           </div>
@@ -227,6 +275,12 @@ export default function InvoiceDetailPage({ params }) {
                 {processingPayment ? 'Processing...' : 'Pay Now 💳'}
               </button>
             )}
+            <button
+              onClick={sendPortalLink}
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+            >
+              📧 Send Client Portal Link
+            </button>
           </div>
         </div>
       </div>

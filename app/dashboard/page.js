@@ -1,321 +1,365 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import dynamic from 'next/dynamic'
-import Link from 'next/link'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { 
-  DollarSign, 
-  Users, 
-  FileText, 
-  Clock,
-  Calendar,
-  TrendingUp,
-  TrendingDown
-} from 'lucide-react'
-import CustomizableDashboard from '@/components/CustomizableDashboard'
-
-const RevenueChart = dynamic(() => import('@/components/RevenueChart'), { ssr: false })
-const InvoiceChart = dynamic(() => import('@/components/InvoiceChart'), { ssr: false })
-const ValueTrendChart = dynamic(() => import('@/components/ValueTrendChart'), { ssr: false })
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
+import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null)
+  const router = useRouter();
+  const supabase = createClient();
+  
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [showAI, setShowAI] = useState(false);
+  const [aiMessage, setAiMessage] = useState('');
+  const [aiChat, setAiChat] = useState([
+    { role: 'ai', content: "👋 Hello! Ask me about invoices, estimates, or currencies!" }
+  ]);
+  
   const [stats, setStats] = useState({
+    totalRevenue: 0,
+    netProfit: 0,
+    pendingAmount: 0,
     totalInvoices: 0,
+    paidInvoices: 0,
+    overdueInvoices: 0,
     totalClients: 0,
-    revenue: 0,
-    pendingAmount: 0
-  })
-  const [recentInvoices, setRecentInvoices] = useState([])
-  const [recentActivities, setRecentActivities] = useState([])
-  const [mounted, setMounted] = useState(false)
-  const supabase = createClient()
+    totalExpenses: 0,
+    growth: 0
+  });
+  
+  const [recentInvoices, setRecentInvoices] = useState([]);
+  const [recentEstimates, setRecentEstimates] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
+  const [topClients, setTopClients] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
-    setMounted(true)
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
-    loadAllData()
-  }, [])
+    loadAllData();
+  }, [selectedPeriod]);
 
-  const loadAllData = async () => {
-    await Promise.all([
-      loadStats(),
-      loadRecentInvoices(),
-      loadRecentActivities()
-    ])
-  }
+  const navigateTo = (path) => {
+    router.push(path);
+  };
 
-  const loadStats = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { count: invoiceCount } = await supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-      const { count: clientCount } = await supabase.from('clients').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-      const { data: paidInvoices } = await supabase.from('invoices').select('total').eq('user_id', user.id).eq('status', 'paid')
-      const revenue = paidInvoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
-      const { data: pendingInvoices } = await supabase.from('invoices').select('total').eq('user_id', user.id).in('status', ['draft', 'sent'])
-      const pendingAmount = pendingInvoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
-      setStats({ totalInvoices: invoiceCount || 0, totalClients: clientCount || 0, revenue, pendingAmount })
-    }
-  }
-
-  const loadRecentInvoices = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data } = await supabase
-        .from('invoices')
-        .select('*, clients(name)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
-      setRecentInvoices(data || [])
-    }
-  }
-
-  const loadRecentActivities = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data } = await supabase
-        .from('invoices')
-        .select('*, clients(name)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
+  async function loadAllData() {
+    setLoading(true);
+    
+    try {
+      const [invoicesRes, clientsRes, expensesRes, estimatesRes] = await Promise.all([
+        supabase.from('invoices').select('*, clients(id, name)').order('created_at', { ascending: false }),
+        supabase.from('clients').select('id, name, email'),
+        supabase.from('expenses').select('amount, category, date'),
+        supabase.from('estimates').select('*, clients(name)').order('created_at', { ascending: false }).limit(5)
+      ]);
       
-      const formatted = data?.map(activity => ({
-        id: activity.id,
-        type: activity.status === 'paid' ? 'payment' : 'invoice',
-        description: `${activity.status === 'paid' ? 'Payment received' : 'Invoice created'} for ${activity.clients?.name}`,
-        amount: activity.total,
-        date: activity.created_at,
-      })) || []
-      setRecentActivities(formatted)
+      const invoices = invoicesRes.data || [];
+      const clients = clientsRes.data || [];
+      const expenses = expensesRes.data || [];
+      const estimates = estimatesRes.data || [];
+      
+      const paidInvoices = invoices.filter(i => i.status === 'paid');
+      const overdueInvoices = invoices.filter(i => i.status !== 'paid' && i.due_date && new Date(i.due_date) < new Date());
+      const pendingInvoices = invoices.filter(i => i.status !== 'paid' && (!i.due_date || new Date(i.due_date) >= new Date()));
+      
+      const totalRevenue = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+      const pendingAmount = pendingInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+      const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const thisMonthInvoices = invoices.filter(i => {
+        const d = new Date(i.created_at);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      const lastMonthInvoices = invoices.filter(i => {
+        const d = new Date(i.created_at);
+        return d.getMonth() === currentMonth - 1 && d.getFullYear() === currentYear;
+      });
+      const thisMonthRevenue = thisMonthInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.total || 0), 0);
+      const lastMonthRevenue = lastMonthInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.total || 0), 0);
+      const growth = lastMonthRevenue === 0 ? 100 : ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1);
+      
+      setStats({
+        totalRevenue,
+        netProfit: totalRevenue - totalExpenses,
+        pendingAmount,
+        totalInvoices: invoices.length,
+        paidInvoices: paidInvoices.length,
+        overdueInvoices: overdueInvoices.length,
+        totalClients: clients.length,
+        totalExpenses,
+        growth
+      });
+      
+      setRecentInvoices(invoices.slice(0, 6));
+      setRecentEstimates(estimates);
+      
+      let chartData = [];
+      if (selectedPeriod === 'week') {
+        for (let i = 6; i >= 0; i--) {
+          const date = subDays(new Date(), i);
+          const dayInvoices = invoices.filter(inv => 
+            format(new Date(inv.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+          );
+          chartData.push({
+            name: format(date, 'EEE'),
+            revenue: dayInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.total || 0), 0),
+          });
+        }
+      } else if (selectedPeriod === 'month') {
+        for (let i = 29; i >= 0; i -= 3) {
+          const date = subDays(new Date(), i);
+          const dayInvoices = invoices.filter(inv => 
+            format(new Date(inv.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+          );
+          chartData.push({
+            name: format(date, 'MMM dd'),
+            revenue: dayInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.total || 0), 0)
+          });
+        }
+      } else {
+        for (let i = 11; i >= 0; i--) {
+          const date = subMonths(new Date(), i);
+          const monthInvoices = invoices.filter(inv => 
+            new Date(inv.created_at) >= startOfMonth(date) && 
+            new Date(inv.created_at) <= endOfMonth(date)
+          );
+          chartData.push({
+            name: format(date, 'MMM'),
+            revenue: monthInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.total || 0), 0)
+          });
+        }
+      }
+      setRevenueData(chartData);
+      
+      setStatusData([
+        { name: 'Paid', value: paidInvoices.length, color: '#10b981' },
+        { name: 'Pending', value: pendingInvoices.length, color: '#f59e0b' },
+        { name: 'Overdue', value: overdueInvoices.length, color: '#ef4444' }
+      ]);
+      
+      const clientRevenue = {};
+      invoices.forEach(inv => {
+        if (inv.clients?.id && inv.status === 'paid') {
+          clientRevenue[inv.clients.id] = (clientRevenue[inv.clients.id] || 0) + (inv.total || 0);
+        }
+      });
+      const topClientsList = Object.entries(clientRevenue)
+        .map(([id, revenue]) => {
+          const client = clients.find(c => c.id === id);
+          return { name: client?.name || 'Unknown', revenue, id };
+        })
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+      setTopClients(topClientsList);
+      
+      const activities = [];
+      invoices.slice(0, 5).forEach(inv => {
+        activities.push({ 
+          type: 'invoice', 
+          action: inv.status === 'paid' ? 'paid' : 'created', 
+          item: inv.invoice_number, 
+          client: inv.clients?.name, 
+          time: format(new Date(inv.created_at), 'MMM dd, h:mm a'),
+          status: inv.status,
+          id: inv.id
+        });
+      });
+      estimates.forEach(est => {
+        activities.push({ 
+          type: 'estimate', 
+          action: 'created', 
+          item: est.estimate_number, 
+          client: est.clients?.name, 
+          time: format(new Date(est.created_at), 'MMM dd, h:mm a'),
+          status: est.status,
+          id: est.id
+        });
+      });
+      setRecentActivity(activities.sort((a, b) => {
+        const timeA = new Date(a.time);
+        const timeB = new Date(b.time);
+        return timeB - timeA;
+      }).slice(0, 5));
+      
+    } catch (err) {
+      console.error('Error loading dashboard:', err);
     }
+    
+    setLoading(false);
   }
 
-  const chartData = [
-    { month: 'Jan', revenue: 4200, invoices: 8 },
-    { month: 'Feb', revenue: 3800, invoices: 6 },
-    { month: 'Mar', revenue: 5100, invoices: 10 },
-    { month: 'Apr', revenue: 4700, invoices: 9 },
-    { month: 'May', revenue: 5800, invoices: 12 },
-    { month: 'Jun', revenue: 6200, invoices: 14 }
-  ]
+  const handleAISend = () => {
+    if (!aiMessage.trim()) return;
+    const userMsg = aiMessage;
+    setAiChat(prev => [...prev, { role: 'user', content: userMsg }]);
+    setAiMessage('');
+    
+    let response = "Ask me about creating invoices, estimates, or currencies!";
+    const lower = userMsg.toLowerCase();
+    
+    if (lower.includes('invoice')) {
+      response = "📄 Go to Invoices → Create Invoice. Add client, amount, choose currency!";
+    } else if (lower.includes('estimate')) {
+      response = "📋 Go to Estimates → New Estimate. Create, then click 'Convert to Invoice'!";
+    } else if (lower.includes('currency')) {
+      response = "💰 Supported: USD, EUR, GBP, CAD, AUD, JPY, CNY, INR, BRL, AED";
+    } else {
+      response = "💡 Try: 'How to create an invoice?' or 'What currencies are supported?'";
+    }
+    
+    setTimeout(() => {
+      setAiChat(prev => [...prev, { role: 'ai', content: response }]);
+    }, 200);
+  };
 
-  const StatCards = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Link href="/dashboard/invoices" className="block group">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-100">Total Invoices</p>
-              <p className="text-2xl font-bold">{stats.totalInvoices}</p>
-            </div>
-            <FileText className="w-8 h-8 text-blue-200" />
-          </div>
-          <div className="flex items-center gap-1 mt-2 text-blue-100 text-xs">
-            <TrendingUp className="w-3 h-3" />
-            <span>+12% from last month</span>
-          </div>
-        </div>
-      </Link>
-      <Link href="/dashboard/clients" className="block group">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-100">Total Clients</p>
-              <p className="text-2xl font-bold">{stats.totalClients}</p>
-            </div>
-            <Users className="w-8 h-8 text-green-200" />
-          </div>
-          <div className="flex items-center gap-1 mt-2 text-green-100 text-xs">
-            <TrendingUp className="w-3 h-3" />
-            <span>+8% from last month</span>
-          </div>
-        </div>
-      </Link>
-      <Link href="/dashboard/invoices?status=paid" className="block group">
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-100">Total Revenue</p>
-              <p className="text-2xl font-bold">${stats.revenue.toLocaleString()}</p>
-            </div>
-            <DollarSign className="w-8 h-8 text-yellow-200" />
-          </div>
-          <div className="flex items-center gap-1 mt-2 text-yellow-100 text-xs">
-            <TrendingUp className="w-3 h-3" />
-            <span>+15% from last month</span>
-          </div>
-        </div>
-      </Link>
-      <Link href="/dashboard/invoices?status=draft" className="block group">
-        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-100">Pending Amount</p>
-              <p className="text-2xl font-bold">${stats.pendingAmount.toLocaleString()}</p>
-            </div>
-            <Clock className="w-8 h-8 text-red-200" />
-          </div>
-          <div className="flex items-center gap-1 mt-2 text-red-100 text-xs">
-            <TrendingDown className="w-3 h-3" />
-            <span>-5% from last month</span>
-          </div>
-        </div>
-      </Link>
-    </div>
-  )
-
-  const RevenueChartComponent = () => (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Revenue Trend</h3>
-      <div className="h-64">
-        <RevenueChart data={chartData} />
-      </div>
-    </div>
-  )
-
-  const InvoiceChartComponent = () => (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Invoice Volume</h3>
-      <div className="h-64">
-        <InvoiceChart data={chartData} />
-      </div>
-    </div>
-  )
-
-  const ValueChartComponent = () => (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Average Invoice Value</h3>
-      <div className="h-64">
-        <ValueTrendChart data={chartData} />
-      </div>
-    </div>
-  )
-
-  // RECENT INVOICES - NOW CLICKABLE with hover effect
-  const RecentInvoicesComponent = () => (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recent Invoices</h3>
-        <Link href="/dashboard/invoices" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-          View all →
-        </Link>
-      </div>
-      <div className="space-y-2">
-        {recentInvoices.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">No invoices yet</div>
-        ) : (
-          recentInvoices.map((invoice) => (
-            <Link
-              key={invoice.id}
-              href={`/dashboard/invoices/${invoice.id}`}
-              className="block p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all cursor-pointer hover:shadow-md"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{invoice.invoice_number}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{invoice.clients?.name}</p>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">${invoice.total?.toLocaleString()}</p>
-              </div>
-            </Link>
-          ))
-        )}
-      </div>
-    </div>
-  )
-
-  // RECENT ACTIVITIES - NOW CLICKABLE with hover effect
-  const ActivitiesComponent = () => (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Recent Activities</h3>
-      <div className="space-y-2">
-        {recentActivities.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">No recent activities</div>
-        ) : (
-          recentActivities.map((activity) => (
-            <Link
-              key={activity.id}
-              href={`/dashboard/invoices/${activity.id}`}
-              className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all cursor-pointer hover:shadow-md"
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                activity.type === 'payment' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'
-              }`}>
-                {activity.type === 'payment' ? (
-                  <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
-                ) : (
-                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900 dark:text-white">{activity.description}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {new Date(activity.date).toLocaleDateString()}
-                </p>
-              </div>
-            </Link>
-          ))
-        )}
-      </div>
-    </div>
-  )
-
-  const QuickActionsComponent = () => (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-2">
-        <Link href="/dashboard/invoices/new" className="text-center p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400 text-sm hover:bg-blue-100 transition-colors">
-          New Invoice
-        </Link>
-        <Link href="/dashboard/clients" className="text-center p-2 bg-green-50 dark:bg-green-900/30 rounded-lg text-green-600 dark:text-green-400 text-sm hover:bg-green-100 transition-colors">
-          Add Client
-        </Link>
-      </div>
-    </div>
-  )
-
-  const widgetContent = {
-    stats: <StatCards />,
-    revenueChart: <RevenueChartComponent />,
-    invoiceChart: <InvoiceChartComponent />,
-    valueChart: <ValueChartComponent />,
-    recentInvoices: <RecentInvoicesComponent />,
-    activities: <ActivitiesComponent />,
-    quickActions: <QuickActionsComponent />,
-  }
-
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading dashboard...</p>
-        </div>
-      </div>
-    )
+  if (loading) {
+    return <div className="p-8 text-center">Loading dashboard...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back, {user?.email?.split('@')[0]}! 👋</p>
-        </div>
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </span>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
+      {/* AI Button */}
+      <button
+        onClick={() => setShowAI(!showAI)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-2xl flex items-center justify-center text-white text-2xl hover:scale-110"
+      >
+        🤖
+      </button>
+
+      {showAI && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAI(false)} />
+          <div className="fixed bottom-24 right-6 z-50 w-80 h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="p-3 bg-purple-600 text-white flex justify-between">
+              <span className="font-bold">AI Assistant</span>
+              <button onClick={() => setShowAI(false)}>✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 text-sm">
+              {aiChat.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] p-2 rounded-xl ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-3 border-t flex gap-2">
+              <input
+                type="text"
+                value={aiMessage}
+                onChange={(e) => setAiMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAISend()}
+                placeholder="Ask..."
+                className="flex-1 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm"
+              />
+              <button onClick={handleAISend} className="px-3 py-2 rounded-lg bg-purple-600 text-white text-sm">Send</button>
+            </div>
           </div>
+        </>
+      )}
+
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-gray-500">Welcome back! Here's your business overview.</p>
+      </div>
+
+      {/* Period Selector */}
+      <div className="flex gap-2 mb-6">
+        {['week', 'month', 'year'].map(period => (
+          <button
+            key={period}
+            onClick={() => setSelectedPeriod(period)}
+            className={`px-4 py-2 rounded-lg font-medium capitalize ${selectedPeriod === period ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 border'}`}
+          >
+            {period}
+          </button>
+        ))}
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { title: 'Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: '💰', link: '/dashboard/invoices' },
+          { title: 'Profit', value: `$${stats.netProfit.toLocaleString()}`, icon: '📈', link: '/dashboard/reports' },
+          { title: 'Pending', value: `$${stats.pendingAmount.toLocaleString()}`, icon: '⏳', link: '/dashboard/invoices' },
+          { title: 'Invoices', value: stats.totalInvoices, icon: '📄', link: '/dashboard/invoices' },
+          { title: 'Paid', value: stats.paidInvoices, icon: '✅', link: '/dashboard/invoices' },
+          { title: 'Clients', value: stats.totalClients, icon: '👥', link: '/dashboard/clients' },
+          { title: 'Overdue', value: stats.overdueInvoices, icon: '⚠️', link: '/dashboard/invoices' },
+          { title: 'Expenses', value: `$${stats.totalExpenses.toLocaleString()}`, icon: '💰', link: '/dashboard/expenses' },
+        ].map((card, idx) => (
+          <div key={idx} onClick={() => navigateTo(card.link)} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
+            <div className="flex justify-between">
+              <div>
+                <p className="text-gray-500 text-xs">{card.title}</p>
+                <p className="text-xl font-bold">{card.value}</p>
+              </div>
+              <div className="text-2xl">{card.icon}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+          <h2 className="font-bold mb-3">Revenue Trend</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+          <h2 className="font-bold mb-3">Invoice Status</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
+                {statusData.map((entry, index) => (<Cell key={index} fill={entry.color} />))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      <CustomizableDashboard widgetContent={widgetContent} />
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        <button onClick={() => navigateTo('/dashboard/invoices/new')} className="bg-blue-600 text-white p-3 rounded-xl text-sm">📄 Create Invoice</button>
+        <button onClick={() => navigateTo('/dashboard/clients/new')} className="bg-purple-600 text-white p-3 rounded-xl text-sm">👥 Add Client</button>
+        <button onClick={() => navigateTo('/dashboard/estimates/new')} className="bg-green-600 text-white p-3 rounded-xl text-sm">📋 New Estimate</button>
+        <button onClick={() => navigateTo('/dashboard/expenses/new')} className="bg-orange-600 text-white p-3 rounded-xl text-sm">💰 Add Expense</button>
+        <button onClick={() => navigateTo('/dashboard/settings/reminders')} className="bg-yellow-600 text-white p-3 rounded-xl text-sm">🔔 Reminders</button>
+        <button onClick={() => navigateTo('/dashboard/reports')} className="bg-indigo-600 text-white p-3 rounded-xl text-sm">📊 Reports</button>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+        <h2 className="font-bold mb-3">🔄 Recent Activity</h2>
+        <div className="space-y-2">
+          {recentActivity.slice(0, 3).map((activity, idx) => (
+            <div key={idx} onClick={() => navigateTo(activity.type === 'invoice' ? `/dashboard/invoices/${activity.id}` : `/dashboard/estimates/${activity.id}`)} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer text-sm">
+              <span>{activity.type === 'invoice' ? '📄' : '📋'}</span>
+              <span className="flex-1">{activity.action === 'paid' ? 'Payment received' : 'Created'} {activity.item}</span>
+              <span className="text-gray-500 text-xs">{activity.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-  )
+  );
 }

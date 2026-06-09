@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "invoices": "الفواتير",
+    "clients": "العملاء",
+    "expenses": "المصروفات",
+    "estimates": "عروض الأسعار",
+    "recurring": "المتكررة",
+    "settings": "الإعدادات"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "loading": "جاري التحميل...",
+    "back": "رجوع",
+    "create": "إنشاء",
+    "search": "بحث"
+  },
+  "invoices": {
+    "title": "الفواتير",
+    "create_new": "إنشاء فاتورة جديدة",
+    "invoice_number": "رقم الفاتورة",
+    "status": "الحالة",
+    "amount": "المبلغ",
+    "due_date": "تاريخ الاستحقاق",
+    "actions": "إجراءات",
+    "draft": "مسودة",
+    "sent": "مرسلة",
+    "paid": "مدفوعة",
+    "overdue": "متأخرة",
+    "send": "إرسال الفاتورة",
+    "download": "تحميل PDF",
+    "pay_now": "ادفع الآن"
+  },
+  "clients": {
+    "title": "العملاء",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "address": "العنوان",
+    "add_client": "إضافة عميل"
+  },
+  "estimates": {
+    "title": "عروض الأسعار",
+    "new": "عرض سعر جديد",
+    "convert": "تحويل إلى فاتورة"
+  }
+}

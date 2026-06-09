@@ -1,109 +1,100 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import toast, { Toaster } from 'react-hot-toast'
-import { Plus, Download, X } from 'lucide-react'
-
-const EXPENSE_CATEGORIES = ['Office Supplies', 'Software', 'Marketing', 'Travel', 'Meals', 'Rent', 'Utilities', 'Legal', 'Accounting', 'Other']
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { motion } from 'framer-motion';
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [totalExpenses, setTotalExpenses] = useState(0)
-  const [formData, setFormData] = useState({ category: '', amount: '', description: '', date: new Date().toISOString().split('T')[0], is_deductible: true })
-  const supabase = createClient()
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
-  useEffect(() => { loadExpenses() }, [])
+  useEffect(() => {
+    loadExpenses();
+  }, []);
 
-  const loadExpenses = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const response = await fetch(`/api/expenses?userId=${user.id}`)
-      const { data } = await response.json()
-      setExpenses(data || [])
-      setTotalExpenses((data || []).reduce((sum, e) => sum + e.amount, 0))
-    }
-    setLoading(false)
+  async function loadExpenses() {
+    const { data } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+    setExpenses(data || []);
+    setLoading(false);
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const { data: { user } } = await supabase.auth.getUser()
-    await fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, amount: parseFloat(formData.amount), user_id: user.id }) })
-    toast.success('Expense added!')
-    setShowModal(false)
-    loadExpenses()
-  }
+  const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const deductibleExpenses = expenses.filter(e => e.is_deductible).reduce((sum, e) => sum + (e.amount || 0), 0);
 
-  const deleteExpense = async (id) => {
-    if (confirm('Delete this expense?')) {
-      await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' })
-      toast.success('Expense deleted')
-      loadExpenses()
-    }
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading expenses...</div>;
   }
-
-  const exportCSV = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    const response = await fetch(`/api/export?userId=${user.id}&type=expenses`)
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `expenses_export_${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
-  }
-
-  if (loading) return <div className="p-6">Loading expenses...</div>
 
   return (
-    <div className="p-6">
-      <Toaster position="top-right" />
-      <div className="flex justify-between items-center mb-6">
-        <div><h1 className="text-2xl font-bold">Expenses</h1><p className="text-gray-500">Total: <span className="font-bold text-lg">${totalExpenses.toFixed(2)}</span></p></div>
-        <div className="flex gap-2">
-          <button onClick={exportCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"><Download size={18} /> Export CSV</button>
-          <button onClick={() => setShowModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"><Plus size={18} /> Add Expense</button>
+    <div className="p-6 md:p-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Expenses</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Track your business expenses</p>
+        </div>
+        <Link
+          href="/dashboard/expenses/new"
+          className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-medium transition-all"
+        >
+          + Add Expense
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="text-3xl mb-2">💰</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">${totalExpenses.toLocaleString()}</div>
+          <div className="text-gray-500 dark:text-gray-400 text-sm">Total Expenses</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="text-3xl mb-2">✅</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">${deductibleExpenses.toLocaleString()}</div>
+          <div className="text-gray-500 dark:text-gray-400 text-sm">Tax Deductible</div>
         </div>
       </div>
 
-      {expenses.length === 0 ? <div className="text-center py-12 bg-gray-50 rounded-lg">No expenses yet</div> : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left">Date</th><th className="px-4 py-3 text-left">Category</th><th className="px-4 py-3 text-left">Description</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Actions</th></tr></thead>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+              <tr>
+                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Category</th>
+                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Amount</th>
+                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Description</th>
+                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Date</th>
+                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Tax Deductible</th>
+                <th className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">Actions</th>
+              </tr>
+            </thead>
             <tbody>
-              {expenses.map((expense) => (
-                <tr key={expense.id} className="border-t">
-                  <td className="px-4 py-3">{new Date(expense.date).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">{expense.category}</td>
-                  <td className="px-4 py-3">{expense.description || '-'}</td>
-                  <td className="px-4 py-3 text-right font-semibold">${expense.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-center"><button onClick={() => deleteExpense(expense.id)} className="text-red-600">Delete</button></td>
-                </tr>
+              {expenses.map((exp, idx) => (
+                <motion.tr
+                  key={exp.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">{exp.category}</td>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">${exp.amount?.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{exp.description || '-'}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{new Date(exp.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4">
+                    {exp.is_deductible ? '✅ Yes' : '❌ No'}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Link href={`/dashboard/expenses/${exp.id}`} className="text-orange-600 dark:text-orange-400 hover:underline">
+                      Edit →
+                    </Link>
+                  </td>
+                </motion.tr>
               ))}
             </tbody>
-            <tfoot className="bg-gray-50 font-bold"><tr><td colSpan="3" className="px-4 py-3 text-right">Total:</td><td className="px-4 py-3 text-right">${totalExpenses.toFixed(2)}</td><td></td></tr></tfoot>
           </table>
         </div>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">Add Expense</h2><button onClick={() => setShowModal(false)}><X size={20} /></button></div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full p-2 border rounded-lg" required />
-              <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-2 border rounded-lg" required><option value="">Select Category</option>{EXPENSE_CATEGORIES.map(c => <option key={c}>{c}</option>)}</select>
-              <input type="number" step="0.01" placeholder="Amount" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} className="w-full p-2 border rounded-lg" required />
-              <input type="text" placeholder="Description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full p-2 border rounded-lg" />
-              <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg">Add Expense</button>
-            </form>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }

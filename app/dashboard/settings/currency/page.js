@@ -1,99 +1,88 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import toast, { Toaster } from 'react-hot-toast'
-import CurrencySelector from '@/components/CurrencySelector'
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { motion } from 'framer-motion';
+
+const currencies = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+];
 
 export default function CurrencySettingsPage() {
-  const [currency, setCurrency] = useState('USD')
-  const [autoConvert, setAutoConvert] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const supabase = createClient()
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [saving, setSaving] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
-    loadSettings()
-  }, [])
+    loadSettings();
+  }, []);
 
-  const loadSettings = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+  async function loadSettings() {
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data } = await supabase
-        .from('user_currency_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (data) {
-        setCurrency(data.default_currency || 'USD')
-        setAutoConvert(data.auto_convert || false)
-      }
+      const { data } = await supabase.from('user_currency_settings').select('default_currency').eq('user_id', user.id).single();
+      if (data) setSelectedCurrency(data.default_currency);
     }
-    setLoading(false)
   }
 
-  const saveSettings = async () => {
-    setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    const { error } = await supabase
-      .from('user_currency_settings')
-      .upsert({
+  async function saveSettings() {
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('user_currency_settings').upsert({
         user_id: user.id,
-        default_currency: currency,
-        auto_convert: autoConvert,
-      })
-    
-    if (error) {
-      toast.error('Error saving settings')
-    } else {
-      toast.success('Currency settings saved!')
+        default_currency: selectedCurrency
+      });
     }
-    setSaving(false)
+    setSaving(false);
+    alert('Currency settings saved!');
   }
-
-  if (loading) return <div className="p-6">Loading...</div>
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <Toaster position="top-right" />
-      <h1 className="text-2xl font-bold mb-6">Currency Settings</h1>
-      
-      <div className="space-y-6">
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <label className="block font-semibold mb-2">Default Currency</label>
-          <CurrencySelector
-            value={currency}
-            onChange={setCurrency}
-            showConverted={false}
-          />
-          <p className="text-sm text-gray-500 mt-2">
-            New invoices will use this currency by default
-          </p>
+    <div className="p-6 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Currency Settings</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">Choose your default currency for invoices</p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
+          {currencies.map((curr) => (
+            <motion.button
+              key={curr.code}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedCurrency(curr.code)}
+              className={`p-4 rounded-xl text-center transition-all ${
+                selectedCurrency === curr.code
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <div className="text-2xl font-bold">{curr.symbol}</div>
+              <div className="text-sm font-medium">{curr.code}</div>
+              <div className="text-xs opacity-75">{curr.name}</div>
+            </motion.button>
+          ))}
         </div>
-        
-        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div>
-            <h3 className="font-semibold">Auto Currency Conversion</h3>
-            <p className="text-sm text-gray-500">Show USD equivalent for all invoices</p>
-          </div>
-          <button
-            onClick={() => setAutoConvert(!autoConvert)}
-            className={`px-4 py-2 rounded-lg ${autoConvert ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'}`}
-          >
-            {autoConvert ? 'ON' : 'OFF'}
-          </button>
-        </div>
-        
+
         <button
           onClick={saveSettings}
           disabled={saving}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
         >
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? 'Saving...' : 'Save Currency Settings'}
         </button>
       </div>
     </div>
-  )
+  );
 }

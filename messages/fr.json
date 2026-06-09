@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "invoices": "Factures",
+    "clients": "Clients",
+    "expenses": "Dépenses",
+    "estimates": "Devis",
+    "recurring": "Récurrents",
+    "settings": "Paramètres"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "loading": "Chargement...",
+    "back": "Retour",
+    "create": "Créer",
+    "search": "Rechercher"
+  },
+  "invoices": {
+    "title": "Factures",
+    "create_new": "Créer une Facture",
+    "invoice_number": "Numéro de Facture",
+    "status": "Statut",
+    "amount": "Montant",
+    "due_date": "Date d'échéance",
+    "actions": "Actions",
+    "draft": "Brouillon",
+    "sent": "Envoyée",
+    "paid": "Payée",
+    "overdue": "En retard",
+    "send": "Envoyer la Facture",
+    "download": "Télécharger PDF",
+    "pay_now": "Payer Maintenant"
+  },
+  "clients": {
+    "title": "Clients",
+    "name": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "add_client": "Ajouter un Client"
+  },
+  "estimates": {
+    "title": "Devis",
+    "new": "Nouveau Devis",
+    "convert": "Convertir en Facture"
+  }
+}

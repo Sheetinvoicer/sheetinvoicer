@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "invoices": "Facturas",
+    "clients": "Clientes",
+    "expenses": "Gastos",
+    "estimates": "Presupuestos",
+    "recurring": "Recurrentes",
+    "settings": "Configuración"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "loading": "Cargando...",
+    "back": "Volver",
+    "create": "Crear",
+    "search": "Buscar"
+  },
+  "invoices": {
+    "title": "Facturas",
+    "create_new": "Crear Nueva Factura",
+    "invoice_number": "Número de Factura",
+    "status": "Estado",
+    "amount": "Monto",
+    "due_date": "Fecha de Vencimiento",
+    "actions": "Acciones",
+    "draft": "Borrador",
+    "sent": "Enviada",
+    "paid": "Pagada",
+    "overdue": "Vencida",
+    "send": "Enviar Factura",
+    "download": "Descargar PDF",
+    "pay_now": "Pagar Ahora"
+  },
+  "clients": {
+    "title": "Clientes",
+    "name": "Nombre",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "add_client": "Agregar Cliente"
+  },
+  "estimates": {
+    "title": "Presupuestos",
+    "new": "Nuevo Presupuesto",
+    "convert": "Convertir a Factura"
+  }
+}

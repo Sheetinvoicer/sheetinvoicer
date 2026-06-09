@@ -1,0 +1,1 @@
+transpilePackages: ["next-intl"],

@@ -1,84 +1,94 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { MessageCircle, X, Send } from 'lucide-react'
 
 export default function AIAssistant() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [message, setMessage] = useState('');
-  const [chat, setChat] = useState([
-    { role: 'ai', content: "🤖 AI Ready! Try: 'Show me my report'" }
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: 'Hello! I\'m your AI assistant. How can I help you today?' }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const sendMessage = async () => {
-    if (!message.trim() || loading) return;
-    
-    const userMsg = message;
-    setChat(prev => [...prev, { role: 'user', content: userMsg }]);
-    setMessage('');
-    setLoading(true);
-    
+    if (!input.trim()) return
+
+    const userMessage = { role: 'user', content: input }
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setLoading(true)
+
     try {
-      const res = await fetch('/api/agents/chat', {
+      const response = await fetch('/api/agents/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg })
-      });
-      
-      const data = await res.json();
-      
-      if (res.status === 401) {
-        setChat(prev => [...prev, { role: 'ai', content: '⚠️ Please refresh the page and try again.' }]);
-      } else if (data.error) {
-        setChat(prev => [...prev, { role: 'ai', content: '❌ Error: ' + data.error }]);
-      } else {
-        setChat(prev => [...prev, { role: 'ai', content: data.message || 'No response' }]);
-      }
-    } catch (err) {
-      setChat(prev => [...prev, { role: 'ai', content: '❌ Connection error. Please try again.' }]);
+        body: JSON.stringify({ message: input }),
+      })
+      const data = await response.json()
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response || 'Sorry, I could not process that.' }])
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Error connecting to AI. Please try again.' }])
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false);
-  };
+  }
 
   return (
     <>
+      {/* Floating button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-purple-600 text-white text-2xl shadow-lg hover:bg-purple-700"
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all"
       >
-        🤖
+        <MessageCircle size={24} />
       </button>
 
+      {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col border">
-          <div className="p-3 bg-purple-600 text-white rounded-t-2xl flex justify-between">
-            <span>🤖 AI</span>
-            <button onClick={() => setIsOpen(false)}>✕</button>
+        <div className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl flex flex-col border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Header */}
+          <div className="flex justify-between items-center p-4 bg-blue-600 text-white">
+            <h3 className="font-semibold">AI Assistant</h3>
+            <button onClick={() => setIsOpen(false)} className="hover:opacity-80">
+              <X size={18} />
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {chat.map((msg, idx) => (
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-2 rounded-xl ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-100'}`}>
-                  {msg.content}
+                <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'}`}>
+                  <p className="text-sm">{msg.content}</p>
                 </div>
               </div>
             ))}
-            {loading && <div>Thinking...</div>}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                  <p className="text-sm">Thinking...</p>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="p-3 border-t flex gap-2">
+
+          {/* Input */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
             <input
               type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-1 p-2 rounded-lg bg-gray-100"
-              placeholder="Show me my report"
+              placeholder="Ask me anything..."
+              className="flex-1 px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
             />
-            <button onClick={sendMessage} className="px-4 py-2 rounded-lg bg-purple-600 text-white">Send</button>
+            <button onClick={sendMessage} disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              <Send size={18} />
+            </button>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }

@@ -10,6 +10,7 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState(null);
+  const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
@@ -21,22 +22,57 @@ export default function InvoicesPage() {
   }, [searchParams]);
 
   async function loadInvoices(statusFilter) {
-    let query = supabase
-      .from('invoices')
-      .select('*, clients(name)')
-      .order('created_at', { ascending: false });
+    setLoading(true);
+    setError(null);
     
-    if (statusFilter === 'paid') {
-      query = query.eq('status', 'paid');
-    } else if (statusFilter === 'pending') {
-      // Show ALL non-paid invoices (draft, sent, overdue)
-      query = query.neq('status', 'paid');
-    } else if (statusFilter === 'overdue') {
-      query = query.eq('status', 'sent').lt('due_date', new Date().toISOString().split('T')[0]);
+    try {
+      // First, get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('Auth error:', userError);
+        setError('Please login again');
+        setLoading(false);
+        return;
+      }
+      
+      if (!user) {
+        setError('No user found. Please login.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Loading invoices for user:', user.id);
+      
+      // Query invoices for this user
+      let query = supabase
+        .from('invoices')
+        .select('*, clients(name)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (statusFilter === 'paid') {
+        query = query.eq('status', 'paid');
+      } else if (statusFilter === 'pending') {
+        query = query.neq('status', 'paid');
+      } else if (statusFilter === 'overdue') {
+        query = query.eq('status', 'sent').lt('due_date', new Date().toISOString().split('T')[0]);
+      }
+      
+      const { data, error: fetchError } = await query;
+      
+      if (fetchError) {
+        console.error('Fetch error:', fetchError);
+        setError(fetchError.message);
+      } else {
+        console.log('Invoices found:', data?.length);
+        setInvoices(data || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError(err.message);
     }
     
-    const { data } = await query;
-    setInvoices(data || []);
     setLoading(false);
   }
 
@@ -48,13 +84,11 @@ export default function InvoicesPage() {
     }
   };
 
-  // Calculate counts
-  const totalInvoices = invoices.length;
   const paidCount = invoices.filter(i => i.status === 'paid').length;
   const pendingCount = invoices.filter(i => i.status !== 'paid').length;
 
   const filterButtons = [
-    { label: 'All', value: null, count: totalInvoices },
+    { label: 'All', value: null, count: invoices.length },
     { label: 'Paid', value: 'paid', count: paidCount },
     { label: 'Pending', value: 'pending', count: pendingCount },
   ];
@@ -63,13 +97,27 @@ export default function InvoicesPage() {
     return <div className="p-8 text-center">Loading invoices...</div>;
   }
 
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-500">Error: {error}</p>
+        <button 
+          onClick={() => loadInvoices(filter)} 
+          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 md:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Invoices</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">
-            {filter === 'paid' ? 'Showing paid invoices' : filter === 'pending' ? 'Showing pending invoices (unpaid)' : 'All invoices'}
+            Total: {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
           </p>
         </div>
         <Link
@@ -97,28 +145,34 @@ export default function InvoicesPage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-              <tr>
-                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Invoice #</th>
-                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Client</th>
-                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Amount</th>
-                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Status</th>
-                <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Due Date</th>
-                <th className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.length === 0 ? (
+      {invoices.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+          <div className="text-6xl mb-4">📄</div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No invoices yet</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">Create your first invoice to get started</p>
+          <Link
+            href="/dashboard/invoices/new"
+            className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium"
+          >
+            + Create Invoice
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                    No invoices found
-                  </td>
+                  <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Invoice #</th>
+                  <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Client</th>
+                  <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Amount</th>
+                  <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Status</th>
+                  <th className="px-6 py-4 text-left text-gray-600 dark:text-gray-300">Due Date</th>
+                  <th className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">Actions</th>
                 </tr>
-              ) : (
-                invoices.map((inv, idx) => (
+              </thead>
+              <tbody>
+                {invoices.map((inv, idx) => (
                   <motion.tr
                     key={inv.id}
                     initial={{ opacity: 0 }}
@@ -129,7 +183,7 @@ export default function InvoicesPage() {
                     <td className="px-6 py-4 text-gray-900 dark:text-white">{inv.invoice_number}</td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{inv.clients?.name || 'N/A'}</td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                      {inv.currency || 'USD'} {inv.total?.toFixed(2)}
+                      {inv.currency || 'USD'} {Number(inv.total || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(inv.status)}`}>
@@ -145,12 +199,12 @@ export default function InvoicesPage() {
                       </Link>
                     </td>
                   </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

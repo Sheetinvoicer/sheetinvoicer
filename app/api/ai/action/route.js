@@ -6,60 +6,82 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const { message } = await request.json();
     const lower = message.toLowerCase();
     
-    // Fetch real data
-    const [invoicesRes, clientsRes, expensesRes] = await Promise.all([
-      supabase.from('invoices').select('*').eq('user_id', user.id),
-      supabase.from('clients').select('*').eq('user_id', user.id),
-      supabase.from('expenses').select('*').eq('user_id', user.id)
-    ]);
+    // Fetch ALL data directly
+    const { data: invoices } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('user_id', user.id);
     
-    const invoices = invoicesRes.data || [];
-    const clients = clientsRes.data || [];
-    const expenses = expensesRes.data || [];
+    const { data: clients } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('user_id', user.id);
     
-    const paidRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0);
-    const pendingRevenue = invoices.filter(i => i.status !== 'paid').reduce((s, i) => s + (i.total || 0), 0);
-    const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+    const { data: expenses } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', user.id);
+    
+    console.log('Invoices found:', invoices?.length);
+    console.log('First invoice:', invoices?.[0]);
+    
+    // Calculate metrics safely
+    const paidInvoices = invoices?.filter(i => i.status === 'paid') || [];
+    const pendingInvoices = invoices?.filter(i => i.status !== 'paid') || [];
+    const overdueInvoices = invoices?.filter(i => {
+      return i.status !== 'paid' && i.due_date && new Date(i.due_date) < new Date();
+    }) || [];
+    
+    const totalRevenue = paidInvoices.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const totalPending = pendingInvoices.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const totalExpenses = expenses?.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) || 0;
     
     let responseText = '';
     
     if (lower.includes('report') || lower.includes('how am i')) {
-      responseText = `📊 YOUR BUSINESS REPORT\n\n💰 Revenue: $${paidRevenue.toLocaleString()}\n⏳ Pending: $${pendingRevenue.toLocaleString()}\n📉 Expenses: $${totalExpenses.toLocaleString()}\n📈 Profit: $${(paidRevenue - totalExpenses).toLocaleString()}\n📄 Invoices: ${invoices.length}\n👥 Clients: ${clients.length}\n\n${(paidRevenue - totalExpenses) > 0 ? '✅ Your business is profitable!' : '⚠️ Review your expenses.'}`;
-    } else {
-      responseText = `🤖 AI COMMANDS\n\n📊 "Show me my report" - Business summary\n📈 "Predict cash flow" - Future outlook\n📧 "Send reminders" - Payment follow-ups\n👥 "Analyze client [name]" - Client insights`;
+      responseText = `📊 YOUR BUSINESS REPORT\n\n` +
+        `💰 Revenue: $${totalRevenue.toLocaleString()}\n` +
+        `⏳ Pending: $${totalPending.toLocaleString()}\n` +
+        `📉 Expenses: $${totalExpenses.toLocaleString()}\n` +
+        `📈 Profit: $${(totalRevenue - totalExpenses).toLocaleString()}\n` +
+        `📄 Invoices: ${invoices?.length || 0}\n` +
+        `✅ Paid: ${paidInvoices.length}\n` +
+        `⚠️ Overdue: ${overdueInvoices.length}\n` +
+        `👥 Clients: ${clients?.length || 0}\n\n` +
+        `${(totalRevenue - totalExpenses) > 0 ? '✅ Your business is profitable!' : '⚠️ Review your expenses.'}`;
+    } 
+    else if (lower.includes('invoices') || lower.includes('list invoices')) {
+      if (!invoices || invoices.length === 0) {
+        responseText = "📄 No invoices found. Create your first invoice from the Invoices page!";
+      } else {
+        responseText = `📄 YOUR INVOICES (${invoices.length})\n\n` +
+          invoices.slice(0, 5).map(inv => 
+            `• ${inv.invoice_number}: ${inv.currency || 'USD'} ${Number(inv.total).toFixed(2)} (${inv.status || 'draft'})`
+          ).join('\n');
+        if (invoices.length > 5) {
+          responseText += `\n\n... and ${invoices.length - 5} more`;
+        }
+      }
+    }
+    else {
+      responseText = `🤖 AI COMMANDS\n\n` +
+        `📊 "Show me my report" - Business summary\n` +
+        `📄 "List my invoices" - See all invoices\n` +
+        `📈 "Predict cash flow" - Future outlook\n` +
+        `📧 "Send reminders" - Payment follow-ups\n` +
+        `👥 "List my clients" - See all clients`;
     }
     
-    return new Response(JSON.stringify({ success: true, message: responseText }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ success: true, message: responseText });
     
   } catch (error) {
     console.error('AI Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ error: error.message }, { status: 500 });
   }
-}
-
-// Also handle OPTIONS for CORS if needed
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }

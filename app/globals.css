@@ -2,53 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark mode is default - everything is readable */
+/* Light Mode - High Contrast Text */
 :root {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --border: #334155;
+  --text-primary: #1f2937;
+  --text-secondary: #374151;
+  --text-muted: #4b5563;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --border: #e5e7eb;
 }
 
-/* Light mode adjustments */
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --border: #e2e8f0;
-  }
+/* Dark Mode */
+.dark {
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-muted: #9ca3af;
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --border: #374151;
 }
 
-/* Apply globally */
 body {
+  color: var(--text-primary);
   background-color: var(--bg-primary);
+}
+
+/* Improve all text contrast */
+.text-gray-900, .text-gray-800, .text-gray-700 {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-600, .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-400, .text-gray-300 {
+  color: var(--text-muted) !important;
+}
+
+/* Card backgrounds */
+.bg-white, .bg-gray-50, .bg-gray-100 {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Borders */
+.border-gray-200, .border-gray-300 {
+  border-color: var(--border) !important;
+}
+
+/* Tables */
+table td, table th {
+  color: var(--text-secondary);
+}
+
+/* Input fields */
+input, textarea, select {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* Fix pending icon positioning */
+.flex.items-center.justify-between .text-4xl {
+  position: relative;
+  top: 0;
+  right: 0;
+}
+
+/* Ensure icons are properly aligned */
+.space-y-3 .flex {
+  align-items: center;
+}
+
+/* Recent activity text */
+.bg-gray-50, .dark\:bg-gray-700\/50 {
   color: var(--text-primary);
 }
 
-/* Improve table contrast in light mode */
-.light .bg-white\/5 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
+/* Make all text readable in light mode */
+.light-mode-fix {
+  color: #1f2937 !important;
 }
 
-.light .text-white {
-  color: #1e293b !important;
-}
-
-.light .text-white\/80 {
-  color: #475569 !important;
-}
-
-.light .text-white\/60 {
-  color: #64748b !important;
-}
-
-.light .border-white\/10 {
-  border-color: #e2e8f0 !important;
-}
-
-.light .bg-white\/10 {
-  background-color: #f1f5f9 !important;
+.dark .light-mode-fix {
+  color: #f9fafb !important;
 }

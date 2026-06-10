@@ -65,10 +65,9 @@ export default function MobileMenu() {
         setIsSearchOpen(true);
         break;
       case 'ai':
-        // Find and click the AI button (floating or from mobile menu)
-        const aiBtn = document.querySelector('.fixed.bottom-6.right-6 button, .fixed.bottom-24 button');
+        const aiBtn = document.querySelector('.fixed.bottom-6.right-6 button');
         if (aiBtn) aiBtn.click();
-        else alert('AI Assistant: Type "Show me my report" in the chat');
+        else alert('AI Assistant: Type "Show me my report"');
         break;
       case 'menu':
         setIsOpen(true);
@@ -85,12 +84,12 @@ export default function MobileMenu() {
     <>
       {/* Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg lg:hidden">
-        <div className="flex justify-around items-center py-2 px-4">
+        <div className="flex justify-around items-center py-3 px-4">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.name}
               onClick={() => handleAction(action.action)}
-              className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all active:scale-95 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all active:scale-95"
               style={{ color: action.color }}
             >
               <span className="text-2xl">{action.icon}</span>
@@ -195,11 +194,12 @@ export default function MobileMenu() {
                   />
                   <button
                     onClick={() => setIsSearchOpen(false)}
-                    className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800"
+                    className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                   >
                     Cancel
                   </button>
                 </div>
+                
                 {searchResults.length > 0 && (
                   <div className="space-y-2">
                     {searchResults.map((result) => (
@@ -211,12 +211,13 @@ export default function MobileMenu() {
                         }}
                         className="w-full text-left p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
-                        <div className="font-medium">{result.label}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{result.label}</div>
                         <div className="text-xs text-gray-500 capitalize">{result.type}</div>
                       </button>
                     ))}
                   </div>
                 )}
+                
                 {searchQuery.length > 2 && searchResults.length === 0 && (
                   <div className="text-center text-gray-500 py-8">No results found</div>
                 )}

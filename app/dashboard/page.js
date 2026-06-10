@@ -158,94 +158,31 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Stats Cards - EACH GOES TO DIFFERENT PAGE */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {/* Revenue → Invoices with paid filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Revenue</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p>
-            </div>
-            <div className="text-2xl">💰</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Revenue</p><p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p></div><div className="text-2xl">💰</div></div>
         </div>
-        
-        {/* Net Profit → Reports page */}
         <div onClick={() => navigateTo('/dashboard/reports')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Net Profit</p>
-              <p className="text-xl font-bold text-green-600 dark:text-green-400">${stats.netProfit.toLocaleString()}</p>
-            </div>
-            <div className="text-2xl">📈</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Net Profit</p><p className="text-xl font-bold text-green-600 dark:text-green-400">${stats.netProfit.toLocaleString()}</p></div><div className="text-2xl">📈</div></div>
         </div>
-        
-        {/* Pending → Invoices with pending filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'pending')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Pending</p>
-              <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">${stats.pendingAmount.toLocaleString()}</p>
-            </div>
-            <div className="text-2xl">⏳</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Pending</p><p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">${stats.pendingAmount.toLocaleString()}</p></div><div className="text-2xl">⏳</div></div>
         </div>
-        
-        {/* Total Invoices → Invoices page */}
         <div onClick={() => navigateTo('/dashboard/invoices')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Invoices</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p>
-            </div>
-            <div className="text-2xl">📄</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Invoices</p><p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p></div><div className="text-2xl">📄</div></div>
         </div>
-        
-        {/* Paid Invoices → Invoices with paid filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Paid</p>
-              <p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p>
-            </div>
-            <div className="text-2xl">✅</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Paid</p><p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p></div><div className="text-2xl">✅</div></div>
         </div>
-        
-        {/* Clients → Clients page */}
         <div onClick={() => navigateTo('/dashboard/clients')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Clients</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p>
-            </div>
-            <div className="text-2xl">👥</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Clients</p><p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p></div><div className="text-2xl">👥</div></div>
         </div>
-        
-        {/* Overdue → Invoices with overdue filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'overdue')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Overdue</p>
-              <p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p>
-            </div>
-            <div className="text-2xl">⚠️</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Overdue</p><p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p></div><div className="text-2xl">⚠️</div></div>
         </div>
-        
-        {/* Expenses → Expenses page */}
         <div onClick={() => navigateTo('/dashboard/expenses')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-gray-500 text-xs">Expenses</p>
-              <p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p>
-            </div>
-            <div className="text-2xl">💰</div>
-          </div>
+          <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Expenses</p><p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p></div><div className="text-2xl">💰</div></div>
         </div>
       </div>
 
@@ -263,21 +200,15 @@ export default function DashboardPage() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
           <h2 className="font-bold mb-3">Invoice Status</h2>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
-                {statusData.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} style={{ cursor: 'pointer' }} onClick={() => navigateTo(entry.link)} />
-                ))}
+                {statusData.map((entry, index) => (<Cell key={index} fill={entry.color} />))}
               </Pie>
               <Tooltip />
-              <Legend onClick={(e) => {
-                const item = statusData.find(d => d.name === e.value);
-                if (item) navigateTo(item.link);
-              }} />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -293,29 +224,22 @@ export default function DashboardPage() {
           {recentInvoices.map((inv, idx) => (
             <div key={idx} onClick={() => navigateTo(`/dashboard/invoices/${inv.id}`)} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer">
               <div className="flex items-center gap-3">
-                <span className={`text-2xl ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
-                  {inv.status === 'paid' ? '✅' : '📄'}
-                </span>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p>
-                  <p className="text-xs text-gray-500">Due: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p>
-                </div>
+                <span className={`text-2xl ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status === 'paid' ? '✅' : '📄'}</span>
+                <div><p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p><p className="text-xs text-gray-500">Due: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p></div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p>
-                <p className={`text-xs ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status || 'draft'}</p>
-              </div>
+              <div className="text-right"><p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p><p className={`text-xs ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status || 'draft'}</p></div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* AI Button - ADDED HERE INSIDE RETURN */}
+      <button
+        onClick={() => alert('AI: Type "Show me my report" in the chat')}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl shadow-lg hover:scale-110 transition-all flex items-center justify-center"
+      >
+        🤖
+      </button>
     </div>
-{/* AI Button */}
-<button
-  onClick={() => alert('AI: Type "Show me my report" in the chat')}
-  className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl shadow-lg hover:scale-110 transition-all flex items-center justify-center"
->
-  🤖
-</button>
   );
 }

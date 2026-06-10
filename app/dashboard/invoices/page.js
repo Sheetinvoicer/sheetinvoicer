@@ -10,7 +10,6 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState(null);
-  const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
@@ -23,56 +22,34 @@ export default function InvoicesPage() {
 
   async function loadInvoices(statusFilter) {
     setLoading(true);
-    setError(null);
     
-    try {
-      // First, get the current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        console.error('Auth error:', userError);
-        setError('Please login again');
-        setLoading(false);
-        return;
-      }
-      
-      if (!user) {
-        setError('No user found. Please login.');
-        setLoading(false);
-        return;
-      }
-      
-      console.log('Loading invoices for user:', user.id);
-      
-      // Query invoices for this user
-      let query = supabase
-        .from('invoices')
-        .select('*, clients(name)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (statusFilter === 'paid') {
-        query = query.eq('status', 'paid');
-      } else if (statusFilter === 'pending') {
-        query = query.neq('status', 'paid');
-      } else if (statusFilter === 'overdue') {
-        query = query.eq('status', 'sent').lt('due_date', new Date().toISOString().split('T')[0]);
-      }
-      
-      const { data, error: fetchError } = await query;
-      
-      if (fetchError) {
-        console.error('Fetch error:', fetchError);
-        setError(fetchError.message);
-      } else {
-        console.log('Invoices found:', data?.length);
-        setInvoices(data || []);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError(err.message);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No user');
+      setLoading(false);
+      return;
     }
     
+    let query = supabase
+      .from('invoices')
+      .select('*, clients(name)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    // FIX: Proper filtering for overdue
+    if (statusFilter === 'paid') {
+      query = query.eq('status', 'paid');
+    } else if (statusFilter === 'pending') {
+      query = query.neq('status', 'paid');
+    } else if (statusFilter === 'overdue') {
+      // Overdue = status NOT paid AND due_date IS IN THE PAST
+      const today = new Date().toISOString().split('T')[0];
+      query = query.neq('status', 'paid').lt('due_date', today);
+    }
+    
+    const { data } = await query;
+    setInvoices(data || []);
     setLoading(false);
   }
 
@@ -84,31 +61,21 @@ export default function InvoicesPage() {
     }
   };
 
+  // Calculate counts based on ACTUAL data
+  const today = new Date().toISOString().split('T')[0];
   const paidCount = invoices.filter(i => i.status === 'paid').length;
-  const pendingCount = invoices.filter(i => i.status !== 'paid').length;
+  const overdueCount = invoices.filter(i => i.status !== 'paid' && i.due_date && i.due_date < today).length;
+  const pendingCount = invoices.filter(i => i.status !== 'paid' && (!i.due_date || i.due_date >= today)).length;
 
   const filterButtons = [
     { label: 'All', value: null, count: invoices.length },
     { label: 'Paid', value: 'paid', count: paidCount },
     { label: 'Pending', value: 'pending', count: pendingCount },
+    { label: 'Overdue', value: 'overdue', count: overdueCount },
   ];
 
   if (loading) {
     return <div className="p-8 text-center">Loading invoices...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">Error: {error}</p>
-        <button 
-          onClick={() => loadInvoices(filter)} 
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg"
-        >
-          Retry
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -117,7 +84,10 @@ export default function InvoicesPage() {
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Invoices</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">
-            Total: {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
+            {filter === 'paid' ? 'Showing paid invoices' : 
+             filter === 'pending' ? 'Showing pending invoices' :
+             filter === 'overdue' ? 'Showing overdue invoices' : 
+             'All invoices'}
           </p>
         </div>
         <Link
@@ -129,12 +99,12 @@ export default function InvoicesPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-2">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-2 overflow-x-auto">
         {filterButtons.map((btn) => (
           <button
             key={btn.label}
             onClick={() => router.push(`/dashboard/invoices${btn.value ? `?status=${btn.value}` : ''}`)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               (filter === btn.value) || (filter === null && btn.value === null)
                 ? 'bg-purple-600 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -148,8 +118,13 @@ export default function InvoicesPage() {
       {invoices.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
           <div className="text-6xl mb-4">📄</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No invoices yet</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">Create your first invoice to get started</p>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No invoices found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            {filter === 'overdue' ? 'No overdue invoices! Good job!' :
+             filter === 'paid' ? 'No paid invoices yet' :
+             filter === 'pending' ? 'No pending invoices' :
+             'Create your first invoice to get started'}
+          </p>
           <Link
             href="/dashboard/invoices/new"
             className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium"

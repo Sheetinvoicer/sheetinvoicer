@@ -1,28 +1,36 @@
-import './globals.css'
-import { ThemeProvider } from '@/components/ThemeProvider'
-import { Analytics } from '@vercel/analytics/react'
-import { Toaster } from 'react-hot-toast'
+import type { Metadata } from "next";
+import localFont from "next/font/local";
+import "./globals.css";
+import ChatWidget from "@/components/ChatWidget";
 
-export const metadata = {
-  title: 'SheetInvoicer',
-  description: 'Professional invoicing made simple',
-  manifest: '/manifest.json',
-  themeColor: '#3b82f6',
-}
+const geistSans = localFont({
+  src: "./fonts/GeistVF.woff",
+  variable: "--font-geist-sans",
+  weight: "100 900",
+});
+const geistMono = localFont({
+  src: "./fonts/GeistMonoVF.woff",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+});
+
+export const metadata: Metadata = {
+  title: "SheetInvoicer",
+  description: "AI-Powered Invoicing System",
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
-        <ThemeProvider>
-          {children}
-          <Toaster position="top-right" />
-          <Analytics />
-        </ThemeProvider>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+        <ChatWidget />
       </body>
     </html>
   );

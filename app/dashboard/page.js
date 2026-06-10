@@ -38,7 +38,7 @@ export default function DashboardPage() {
 
   const navigateTo = (path, filter = null) => {
     if (filter) {
-      router.push(`${path}?status=${filter}`);
+      router.push(path + '?status=' + filter);
     } else {
       router.push(path);
     }
@@ -139,13 +139,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2">Welcome back! Here's your business overview.</p>
       </div>
 
-      {/* Period Selector */}
       <div className="flex gap-2 mb-6">
         {['week', 'month', 'year'].map(period => (
           <button
@@ -158,7 +156,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between"><div><p className="text-gray-500 text-xs">Revenue</p><p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p></div><div className="text-2xl">💰</div></div>
@@ -186,7 +183,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
           <h2 className="font-bold mb-3">Revenue Trend</h2>
@@ -214,7 +210,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Invoices */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="font-bold">Recent Invoices</h2>
@@ -233,7 +228,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* AI Button - ADDED HERE INSIDE RETURN */}
       <button
         onClick={() => alert('AI: Type "Show me my report" in the chat')}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl shadow-lg hover:scale-110 transition-all flex items-center justify-center"

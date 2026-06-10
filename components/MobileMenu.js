@@ -28,6 +28,7 @@ export default function MobileMenu() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -35,10 +36,12 @@ export default function MobileMenu() {
   useEffect(() => {
     setIsOpen(false);
     setIsSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
   }, [pathname]);
 
   useEffect(() => {
-    if (searchQuery.length > 2) {
+    if (searchQuery.length >= 2) {
       performSearch();
     } else {
       setSearchResults([]);
@@ -46,14 +49,62 @@ export default function MobileMenu() {
   }, [searchQuery]);
 
   async function performSearch() {
-    const [invoices, clients] = await Promise.all([
-      supabase.from('invoices').select('invoice_number, id').ilike('invoice_number', `%${searchQuery}%`).limit(5),
-      supabase.from('clients').select('name, id').ilike('name', `%${searchQuery}%`).limit(5)
-    ]);
-    setSearchResults([
-      ...(invoices.data?.map(i => ({ type: 'invoice', label: i.invoice_number, id: i.id })) || []),
-      ...(clients.data?.map(c => ({ type: 'client', label: c.name, id: c.id })) || [])
-    ]);
+    setSearching(true);
+    try {
+      // Search invoices by invoice_number
+      const { data: invoices, error: invError } = await supabase
+        .from('invoices')
+        .select('invoice_number, id, total, status')
+        .ilike('invoice_number', `%${searchQuery}%`)
+        .limit(5);
+      
+      if (invError) console.error('Invoice search error:', invError);
+      
+      // Search clients by name or email
+      const { data: clients, error: clientError } = await supabase
+        .from('clients')
+        .select('id, name, email')
+        .ilike('name', `%${searchQuery}%`)
+        .limit(5);
+      
+      if (clientError) console.error('Client search error:', clientError);
+      
+      const results = [];
+      
+      // Add invoice results
+      if (invoices && invoices.length > 0) {
+        invoices.forEach(inv => {
+          results.push({
+            type: 'invoice',
+            id: inv.id,
+            title: inv.invoice_number,
+            subtitle: `Total: ${inv.total || 0} • Status: ${inv.status || 'draft'}`,
+            link: `/dashboard/invoices/${inv.id}`,
+            icon: '📄'
+          });
+        });
+      }
+      
+      // Add client results
+      if (clients && clients.length > 0) {
+        clients.forEach(client => {
+          results.push({
+            type: 'client',
+            id: client.id,
+            title: client.name,
+            subtitle: client.email || 'No email',
+            link: `/dashboard/clients/${client.id}`,
+            icon: '👥'
+          });
+        });
+      }
+      
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchResults([]);
+    }
+    setSearching(false);
   }
 
   const handleAction = (action) => {
@@ -65,11 +116,10 @@ export default function MobileMenu() {
         setIsSearchOpen(true);
         break;
       case 'ai':
-        // Use global function to open AI assistant
         if (typeof window !== 'undefined' && window.openAIAssistant) {
           window.openAIAssistant();
         } else {
-          alert('AI Assistant is loading. Please try again in a moment.');
+          alert('AI Assistant is loading. Please try again.');
         }
         break;
       case 'menu':
@@ -168,7 +218,7 @@ export default function MobileMenu() {
         )}
       </AnimatePresence>
 
-      {/* Search Modal */}
+      {/* Search Modal - IMPROVED */}
       <AnimatePresence>
         {isSearchOpen && (
           <>
@@ -183,44 +233,73 @@ export default function MobileMenu() {
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl lg:hidden"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl lg:hidden max-h-[80vh] flex flex-col"
             >
-              <div className="p-4">
-                <div className="flex gap-3 mb-4">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search invoices, clients..."
-                    className="flex-1 p-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                    autoFocus
-                  />
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search invoices or clients..."
+                      className="w-full p-3 pl-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                      autoFocus
+                    />
+                  </div>
                   <button
                     onClick={() => setIsSearchOpen(false)}
-                    className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    className="px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                   >
                     Cancel
                   </button>
                 </div>
-                {searchResults.length > 0 && (
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4">
+                {searching && (
+                  <div className="text-center text-gray-500 py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3"></div>
+                    Searching...
+                  </div>
+                )}
+                
+                {!searching && searchQuery.length >= 2 && searchResults.length === 0 && (
+                  <div className="text-center text-gray-500 py-8">
+                    <div className="text-4xl mb-2">🔍</div>
+                    <p>No results found for "{searchQuery}"</p>
+                    <p className="text-sm mt-2">Try searching by invoice number or client name</p>
+                  </div>
+                )}
+                
+                {!searching && searchResults.length > 0 && (
                   <div className="space-y-2">
                     {searchResults.map((result) => (
                       <button
-                        key={result.id}
+                        key={`${result.type}-${result.id}`}
                         onClick={() => {
-                          router.push(result.type === 'invoice' ? `/dashboard/invoices/${result.id}` : `/dashboard/clients/${result.id}`);
+                          router.push(result.link);
                           setIsSearchOpen(false);
+                          setSearchQuery('');
                         }}
-                        className="w-full text-left p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="w-full text-left p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all flex items-center gap-3"
                       >
-                        <div className="font-medium text-gray-900 dark:text-white">{result.label}</div>
-                        <div className="text-xs text-gray-500 capitalize">{result.type}</div>
+                        <span className="text-2xl">{result.icon}</span>
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-white">{result.title}</div>
+                          <div className="text-xs text-gray-500">{result.subtitle}</div>
+                        </div>
+                        <span className="text-gray-400">→</span>
                       </button>
                     ))}
                   </div>
                 )}
-                {searchQuery.length > 2 && searchResults.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">No results found</div>
+                
+                {!searching && searchQuery.length > 0 && searchQuery.length < 2 && (
+                  <div className="text-center text-gray-500 py-8">
+                    Type at least 2 characters to search
+                  </div>
                 )}
               </div>
             </motion.div>

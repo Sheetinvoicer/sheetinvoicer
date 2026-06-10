@@ -1,39 +1,99 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const translations = {
-  en: {},
-  es: {},
-  fr: {},
-  ar: {},
+  en: {
+    'nav.dashboard': 'Dashboard',
+    'nav.invoices': 'Invoices',
+    'nav.clients': 'Clients',
+    'nav.expenses': 'Expenses',
+    'nav.estimates': 'Estimates',
+    'nav.recurring': 'Recurring',
+    'nav.reports': 'Reports',
+    'nav.settings': 'Settings',
+    'nav.subscription': 'Subscription',
+    'nav.logout': 'Logout',
+    'nav.darkMode': 'Dark Mode',
+    'nav.lightMode': 'Light Mode',
+    'common.save': 'Save',
+    'common.cancel': 'Cancel',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.loading': 'Loading...',
+  },
+  es: {
+    'nav.dashboard': 'Tablero',
+    'nav.invoices': 'Facturas',
+    'nav.clients': 'Clientes',
+    'nav.expenses': 'Gastos',
+    'nav.estimates': 'Presupuestos',
+    'nav.recurring': 'Recurrentes',
+    'nav.reports': 'Informes',
+    'nav.settings': 'Configuración',
+    'nav.subscription': 'Suscripción',
+    'nav.logout': 'Cerrar sesión',
+    'nav.darkMode': 'Modo oscuro',
+    'nav.lightMode': 'Modo claro',
+    'common.save': 'Guardar',
+    'common.cancel': 'Cancelar',
+    'common.delete': 'Eliminar',
+    'common.edit': 'Editar',
+    'common.loading': 'Cargando...',
+  },
+  fr: {
+    'nav.dashboard': 'Tableau de bord',
+    'nav.invoices': 'Factures',
+    'nav.clients': 'Clients',
+    'nav.expenses': 'Dépenses',
+    'nav.estimates': 'Devis',
+    'nav.recurring': 'Récurrentes',
+    'nav.reports': 'Rapports',
+    'nav.settings': 'Paramètres',
+    'nav.subscription': 'Abonnement',
+    'nav.logout': 'Déconnexion',
+    'nav.darkMode': 'Mode sombre',
+    'nav.lightMode': 'Mode clair',
+    'common.save': 'Enregistrer',
+    'common.cancel': 'Annuler',
+    'common.delete': 'Supprimer',
+    'common.edit': 'Modifier',
+    'common.loading': 'Chargement...',
+  },
+  ar: {
+    'nav.dashboard': 'لوحة التحكم',
+    'nav.invoices': 'الفواتير',
+    'nav.clients': 'العملاء',
+    'nav.expenses': 'المصروفات',
+    'nav.estimates': 'تقديرات',
+    'nav.recurring': 'متكرر',
+    'nav.reports': 'تقارير',
+    'nav.settings': 'الإعدادات',
+    'nav.subscription': 'الاشتراك',
+    'nav.logout': 'تسجيل الخروج',
+    'nav.darkMode': 'الوضع الداكن',
+    'nav.lightMode': 'الوضع المضيء',
+    'common.save': 'حفظ',
+    'common.cancel': 'إلغاء',
+    'common.delete': 'حذف',
+    'common.edit': 'تعديل',
+    'common.loading': 'جاري التحميل...',
+  },
 }
 
-// Load translations
 export function useTranslation() {
   const [locale, setLocale] = useState('en')
-  const [t, setT] = useState(() => (key) => key)
 
   useEffect(() => {
-    // Get locale from URL
-    const pathParts = window.location.pathname.split('/')
-    const lang = pathParts[1]
-    if (['en', 'es', 'fr', 'ar'].includes(lang)) {
-      setLocale(lang)
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
-      document.documentElement.lang = lang
+    const saved = localStorage.getItem('app-language')
+    if (saved && translations[saved]) {
+      setLocale(saved)
     }
-    
-    // Load translations
-    fetch(`/locales/${locale}/common.json`)
-      .then(res => res.json())
-      .then(data => {
-        setT(() => (key) => {
-          return key.split('.').reduce((obj, k) => obj?.[k], data) || key
-        })
-      })
-      .catch(() => setT(() => (key) => key))
-  }, [locale])
+  }, [])
+
+  const t = (key) => {
+    return translations[locale]?.[key] || key
+  }
 
   return { t, locale }
 }

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { Globe } from 'lucide-react'
 
 const languages = [
@@ -12,19 +11,25 @@ const languages = [
 ]
 
 export default function LanguageSwitcher() {
-  const router = useRouter()
-  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [currentLang, setCurrentLang] = useState(languages[0])
 
-  const switchLanguage = (locale) => {
+  useEffect(() => {
+    // Load saved language from localStorage
+    const savedLang = localStorage.getItem('app-language')
+    if (savedLang) {
+      const lang = languages.find(l => l.code === savedLang)
+      if (lang) setCurrentLang(lang)
+    }
+  }, [])
+
+  const switchLanguage = (lang) => {
+    setCurrentLang(lang)
+    localStorage.setItem('app-language', lang.code)
     setIsOpen(false)
-    // Set cookie for language preference
-    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000`
-    // Reload to apply language
-    window.location.href = pathname
+    // Reload page to apply translations
+    window.location.reload()
   }
-
-  const currentLang = languages.find(l => l.code === 'en') || languages[0]
 
   return (
     <div className="relative">
@@ -33,7 +38,7 @@ export default function LanguageSwitcher() {
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full text-left"
       >
         <Globe size={18} />
-        <span className="text-sm">Language ({currentLang.flag})</span>
+        <span className="text-sm">{currentLang.flag} {currentLang.name}</span>
       </button>
       
       {isOpen && (
@@ -42,7 +47,7 @@ export default function LanguageSwitcher() {
             {languages.map(lang => (
               <button
                 key={lang.code}
-                onClick={() => switchLanguage(lang.code)}
+                onClick={() => switchLanguage(lang)}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 first:rounded-t-lg last:rounded-b-lg"
               >
                 <span>{lang.flag}</span>

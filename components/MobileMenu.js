@@ -65,9 +65,12 @@ export default function MobileMenu() {
         setIsSearchOpen(true);
         break;
       case 'ai':
-        const aiBtn = document.querySelector('.fixed.bottom-6.right-6 button');
-        if (aiBtn) aiBtn.click();
-        else alert('AI Assistant: Type "Show me my report"');
+        // Use global function to open AI assistant
+        if (typeof window !== 'undefined' && window.openAIAssistant) {
+          window.openAIAssistant();
+        } else {
+          alert('AI Assistant is loading. Please try again in a moment.');
+        }
         break;
       case 'menu':
         setIsOpen(true);
@@ -199,7 +202,6 @@ export default function MobileMenu() {
                     Cancel
                   </button>
                 </div>
-                
                 {searchResults.length > 0 && (
                   <div className="space-y-2">
                     {searchResults.map((result) => (
@@ -217,7 +219,6 @@ export default function MobileMenu() {
                     ))}
                   </div>
                 )}
-                
                 {searchQuery.length > 2 && searchResults.length === 0 && (
                   <div className="text-center text-gray-500 py-8">No results found</div>
                 )}

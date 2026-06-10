@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 
@@ -11,6 +11,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function InvoicesPage() {
     if (statusFilter === 'paid') {
       query = query.eq('status', 'paid');
     } else if (statusFilter === 'pending') {
+      // Show ALL non-paid invoices (draft, sent, overdue)
       query = query.neq('status', 'paid');
     } else if (statusFilter === 'overdue') {
       query = query.eq('status', 'sent').lt('due_date', new Date().toISOString().split('T')[0]);
@@ -46,11 +48,15 @@ export default function InvoicesPage() {
     }
   };
 
-  // Filter buttons for easy navigation
+  // Calculate counts
+  const totalInvoices = invoices.length;
+  const paidCount = invoices.filter(i => i.status === 'paid').length;
+  const pendingCount = invoices.filter(i => i.status !== 'paid').length;
+
   const filterButtons = [
-    { label: 'All', value: null, count: invoices.length },
-    { label: 'Paid', value: 'paid', count: invoices.filter(i => i.status === 'paid').length },
-    { label: 'Pending', value: 'pending', count: invoices.filter(i => i.status !== 'paid').length },
+    { label: 'All', value: null, count: totalInvoices },
+    { label: 'Paid', value: 'paid', count: paidCount },
+    { label: 'Pending', value: 'pending', count: pendingCount },
   ];
 
   if (loading) {
@@ -63,7 +69,7 @@ export default function InvoicesPage() {
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Invoices</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">
-            {filter === 'paid' ? 'Showing paid invoices' : filter === 'pending' ? 'Showing pending invoices' : 'All invoices'}
+            {filter === 'paid' ? 'Showing paid invoices' : filter === 'pending' ? 'Showing pending invoices (unpaid)' : 'All invoices'}
           </p>
         </div>
         <Link
@@ -77,9 +83,9 @@ export default function InvoicesPage() {
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-2">
         {filterButtons.map((btn) => (
-          <Link
+          <button
             key={btn.label}
-            href={`/dashboard/invoices${btn.value ? `?status=${btn.value}` : ''}`}
+            onClick={() => router.push(`/dashboard/invoices${btn.value ? `?status=${btn.value}` : ''}`)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               (filter === btn.value) || (filter === null && btn.value === null)
                 ? 'bg-purple-600 text-white'
@@ -87,7 +93,7 @@ export default function InvoicesPage() {
             }`}
           >
             {btn.label} ({btn.count})
-          </Link>
+          </button>
         ))}
       </div>
 
@@ -105,34 +111,42 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((inv, idx) => (
-                <motion.tr
-                  key={inv.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                >
-                  <td className="px-6 py-4 text-gray-900 dark:text-white">{inv.invoice_number}</td>
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{inv.clients?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                    {inv.currency || 'USD'} {inv.total?.toFixed(2)}
+              {invoices.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                    No invoices found
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(inv.status)}`}>
-                      {inv.status || 'draft'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                    {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link href={`/dashboard/invoices/${inv.id}`} className="text-purple-600 dark:text-purple-400 hover:underline">
-                      View →
-                    </Link>
-                  </td>
-                </motion.tr>
-              ))}
+                </tr>
+              ) : (
+                invoices.map((inv, idx) => (
+                  <motion.tr
+                    key={inv.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    <td className="px-6 py-4 text-gray-900 dark:text-white">{inv.invoice_number}</td>
+                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{inv.clients?.name || 'N/A'}</td>
+                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                      {inv.currency || 'USD'} {inv.total?.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(inv.status)}`}>
+                        {inv.status || 'draft'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
+                      {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/dashboard/invoices/${inv.id}`} className="text-purple-600 dark:text-purple-400 hover:underline">
+                        View →
+                      </Link>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

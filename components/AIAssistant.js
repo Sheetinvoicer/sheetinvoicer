@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +15,14 @@ export default function AIAssistant() {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Expose global function to open AI from anywhere
+    window.openAIAssistant = () => setIsOpen(true);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      delete window.openAIAssistant;
+    };
   }, []);
 
   const sendMessage = async () => {
@@ -41,18 +48,19 @@ export default function AIAssistant() {
     setLoading(false);
   };
 
-  // Don't show floating button on mobile (use bottom bar instead)
-  if (isMobile) return null;
-
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-purple-600 text-white text-2xl shadow-lg hover:bg-purple-700 transition-all"
-      >
-        🤖
-      </button>
+      {/* Floating button - hidden on mobile */}
+      {!isMobile && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-purple-600 text-white text-2xl shadow-lg hover:bg-purple-700 transition-all"
+        >
+          🤖
+        </button>
+      )}
 
+      {/* Chat Modal - same for both mobile and desktop */}
       {isOpen && (
         <>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)} />

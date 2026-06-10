@@ -310,5 +310,12 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+{/* AI Button */}
+<button
+  onClick={() => alert('AI: Type "Show me my report" in the chat')}
+  className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl shadow-lg hover:scale-110 transition-all flex items-center justify-center"
+>
+  🤖
+</button>
   );
 }

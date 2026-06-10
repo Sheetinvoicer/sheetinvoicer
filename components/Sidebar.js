@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -15,6 +16,7 @@ export default function Sidebar() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { t } = useTranslation()
 
   useEffect(() => {
     setMounted(true)
@@ -27,17 +29,16 @@ export default function Sidebar() {
   }
 
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { name: 'Invoices', href: '/dashboard/invoices', icon: '📄' },
-    { name: 'Clients', href: '/dashboard/clients', icon: '👥' },
-    { name: 'Expenses', href: '/dashboard/expenses', icon: '💰' },
-    { name: 'Estimates', href: '/dashboard/estimates', icon: '📝' },
-    { name: 'Recurring', href: '/dashboard/recurring', icon: '🔄' },
-    { name: 'Reports', href: '/dashboard/reports', icon: '📈' },
-    { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+    { name: t('nav.dashboard'), href: '/dashboard', icon: '📊' },
+    { name: t('nav.invoices'), href: '/dashboard/invoices', icon: '📄' },
+    { name: t('nav.clients'), href: '/dashboard/clients', icon: '👥' },
+    { name: t('nav.expenses'), href: '/dashboard/expenses', icon: '💰' },
+    { name: t('nav.estimates'), href: '/dashboard/estimates', icon: '📝' },
+    { name: t('nav.recurring'), href: '/dashboard/recurring', icon: '🔄' },
+    { name: t('nav.reports'), href: '/dashboard/reports', icon: '📈' },
+    { name: t('nav.settings'), href: '/dashboard/settings', icon: '⚙️' },
     { name: 'Currency', href: '/dashboard/settings/currency', icon: '💱' },
-    { name: 'Reminders', href: '/dashboard/settings/reminders', icon: '🔔' },
-    { name: 'Subscription', href: '/dashboard/subscription', icon: '💳' },
+    { name: t('nav.subscription'), href: '/dashboard/subscription', icon: '💳' },
   ]
 
   return (
@@ -59,11 +60,11 @@ export default function Sidebar() {
         <div className="absolute bottom-6 left-6 right-6 space-y-2">
           <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">
             <span className="text-xl">{mounted && (theme === 'dark' ? '☀️' : '🌙')}</span>
-            <span>{mounted && (theme === 'dark' ? 'Light Mode' : 'Dark Mode')}</span>
+            <span>{mounted && (theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode'))}</span>
           </button>
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
             <span className="text-xl">🚪</span>
-            <span>Logout</span>
+            <span>{t('nav.logout')}</span>
           </button>
         </div>
       </div>

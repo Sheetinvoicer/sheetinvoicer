@@ -1,22 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  compress: true,
+  
+  i18n: {
+    locales: ['en', 'es', 'fr', 'ar'],
+    defaultLocale: 'en',
+    localeDetection: true,
+  },
+  
   images: {
-    domains: [],
+    formats: ['image/avif', 'image/webp'],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/ingest/static/:path*',
-        destination: 'https://us-assets.i.posthog.com/static/:path*',
-      },
-      {
-        source: '/ingest/:path*',
-        destination: 'https://us.i.posthog.com/:path*',
-      },
-    ];
+  
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
-  transpilePackages: ['next-intl'],  // ← ADD THIS LINE
-};
+}
 
-module.exports = nextConfig;
-
+module.exports = nextConfig

@@ -1,4 +1,7 @@
-const locales = ["en", "es", "fr", "ar"];
-const defaultLocale = "en";
+const i18n = {
+  defaultLocale: 'en',
+  locales: ['en', 'es', 'fr', 'ar'],
+  localeDetection: true,
+}
 
-module.exports = { locales, defaultLocale };
+module.exports = i18n

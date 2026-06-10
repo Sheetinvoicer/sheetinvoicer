@@ -1,44 +1,54 @@
-'use client';
+'use client'
 
-import { useRouter, usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { Globe } from 'lucide-react'
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'ar', name: 'العربية', flag: '🇦🇪' }
-];
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+]
 
 export default function LanguageSwitcher() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const currentLocale = useLocale();
+  const router = useRouter()
+  const pathname = usePathname()
 
-  const switchLanguage = (newLocale) => {
-    // Replace the locale in the URL
-    const newPathname = pathname.replace(`/${currentLocale}`, `/${newLocale}`);
-    router.push(newPathname);
-  };
+  const switchLanguage = (locale) => {
+    // Get the current path without locale
+    const pathParts = pathname.split('/')
+    const currentLocale = pathParts[1]
+    
+    // If current locale is one of our locales, replace it
+    if (languages.some(l => l.code === currentLocale)) {
+      pathParts[1] = locale
+      const newPath = pathParts.join('/')
+      router.push(newPath || '/')
+    } else {
+      // Add locale to path
+      router.push(`/${locale}${pathname}`)
+    }
+  }
 
   return (
     <div className="relative group">
-      <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100">
-        <span className="text-xl">{languages.find(l => l.code === currentLocale)?.flag}</span>
-        <span>{languages.find(l => l.code === currentLocale)?.name}</span>
+      <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <Globe size={18} />
+        <span className="text-sm">Language</span>
       </button>
-      <div className="absolute hidden group-hover:block bg-white shadow-lg rounded-lg mt-1 w-40 z-50">
-        {languages.map((lang) => (
+      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+        {languages.map(lang => (
           <button
             key={lang.code}
             onClick={() => switchLanguage(lang.code)}
-            className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
           >
-            <span className="text-xl">{lang.flag}</span>
+            <span>{lang.flag}</span>
             <span>{lang.name}</span>
           </button>
         ))}
       </div>
     </div>
-  );
+  )
 }

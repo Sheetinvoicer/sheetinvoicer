@@ -1,0 +1,69 @@
+{
+  "app": {
+    "name": "SheetInvoicer",
+    "tagline": "Professional invoicing made simple"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "invoices": "Invoices",
+    "clients": "Clients",
+    "expenses": "Expenses",
+    "estimates": "Estimates",
+    "recurring": "Recurring",
+    "reports": "Reports",
+    "settings": "Settings",
+    "subscription": "Subscription",
+    "logout": "Logout",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "new": "New Invoice",
+    "quick": "Quick Invoice",
+    "export": "Export CSV",
+    "number": "Invoice Number",
+    "client": "Client",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "clients": {
+    "title": "Clients",
+    "new": "Add Client",
+    "export": "Export CSV",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "country": "Country",
+    "state": "State",
+    "currency": "Currency"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "new": "Add Expense",
+    "category": "Category",
+    "description": "Description",
+    "amount": "Amount",
+    "date": "Date"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm"
+  }
+}

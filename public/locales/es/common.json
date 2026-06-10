@@ -1,0 +1,69 @@
+{
+  "app": {
+    "name": "SheetInvoicer",
+    "tagline": "Facturación profesional simplificada"
+  },
+  "nav": {
+    "dashboard": "Tablero",
+    "invoices": "Facturas",
+    "clients": "Clientes",
+    "expenses": "Gastos",
+    "estimates": "Presupuestos",
+    "recurring": "Recurrentes",
+    "reports": "Informes",
+    "settings": "Configuración",
+    "subscription": "Suscripción",
+    "logout": "Cerrar sesión",
+    "darkMode": "Modo oscuro",
+    "lightMode": "Modo claro"
+  },
+  "invoices": {
+    "title": "Facturas",
+    "new": "Nueva factura",
+    "quick": "Factura rápida",
+    "export": "Exportar CSV",
+    "number": "Número de factura",
+    "client": "Cliente",
+    "date": "Fecha",
+    "amount": "Monto",
+    "status": "Estado",
+    "actions": "Acciones",
+    "draft": "Borrador",
+    "sent": "Enviada",
+    "paid": "Pagada",
+    "view": "Ver",
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "clients": {
+    "title": "Clientes",
+    "new": "Agregar cliente",
+    "export": "Exportar CSV",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "country": "País",
+    "state": "Estado",
+    "currency": "Moneda"
+  },
+  "expenses": {
+    "title": "Gastos",
+    "new": "Agregar gasto",
+    "category": "Categoría",
+    "description": "Descripción",
+    "amount": "Monto",
+    "date": "Fecha"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "confirm": "Confirmar"
+  }
+}

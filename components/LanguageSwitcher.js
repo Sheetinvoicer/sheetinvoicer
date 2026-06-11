@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -13,9 +14,10 @@ const languages = [
 export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false)
   const [currentLang, setCurrentLang] = useState(languages[0])
+  const router = useRouter()
 
   useEffect(() => {
-    const saved = localStorage.getItem('language')
+    const saved = localStorage.getItem('app-language')
     if (saved) {
       const found = languages.find(l => l.code === saved)
       if (found) setCurrentLang(found)
@@ -24,13 +26,13 @@ export default function LanguageSwitcher() {
 
   const switchLanguage = (lang) => {
     setCurrentLang(lang)
-    localStorage.setItem('language', lang.code)
+    localStorage.setItem('app-language', lang.code)
     setIsOpen(false)
     window.location.reload()
   }
 
   return (
-    <div className="relative w-full border-2 border-red-500 bg-yellow-100 min-h-[50px]">
+    <div className="relative w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left"
@@ -44,7 +46,8 @@ export default function LanguageSwitcher() {
       
       {isOpen && (
         <>
-          <div className="absolute left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+          {/* Dropdown opens UPWARD instead of downward */}
+          <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
             {languages.map(lang => (
               <button
                 key={lang.code}
@@ -62,5 +65,3 @@ export default function LanguageSwitcher() {
     </div>
   )
 }
-// Add this style to the main div for debugging:
-// style={{ border: '2px solid red', background: 'yellow' }}

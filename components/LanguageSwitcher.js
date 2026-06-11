@@ -30,7 +30,7 @@ export default function LanguageSwitcher() {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full border-2 border-red-500 bg-yellow-100 min-h-[50px]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left"

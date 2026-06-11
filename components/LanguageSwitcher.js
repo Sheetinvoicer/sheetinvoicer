@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -14,7 +13,6 @@ const languages = [
 export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false)
   const [currentLang, setCurrentLang] = useState(languages[0])
-  const router = useRouter()
 
   useEffect(() => {
     const saved = localStorage.getItem('app-language')
@@ -45,24 +43,19 @@ export default function LanguageSwitcher() {
       </button>
       
       {isOpen && (
-        <>
-          {/* Dropdown opens UPWARD instead of downward */}
-          <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-            {languages.map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => switchLanguage(lang)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <span className="text-lg">{lang.flag}</span>
-                <span className="text-sm">{lang.name}</span>
-              </button>
-            ))}
-          </div>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-        </>
+        <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+          {languages.map(lang => (
+            <button
+              key={lang.code}
+              onClick={() => switchLanguage(lang)}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            >
+              <span className="text-lg">{lang.flag}</span>
+              <span className="text-sm">{lang.name}</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )
 }
- 

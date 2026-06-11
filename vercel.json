@@ -1,12 +1,7 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/send-reminders",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/generate-recurring",
-      "schedule": "0 8 * * *"
-    }
-  ]
+  "version": 2,
+  "buildCommand": "npm install --legacy-peer-deps && npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
 }

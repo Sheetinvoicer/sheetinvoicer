@@ -2,5 +2,6 @@
   "github": {
     "silent": true,
     "autoAlias": false
-  }
+  },
+  "buildCommand": "npm install --legacy-peer-deps && npm run build"
 }

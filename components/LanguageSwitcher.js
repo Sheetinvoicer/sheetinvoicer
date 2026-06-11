@@ -62,3 +62,5 @@ export default function LanguageSwitcher() {
     </div>
   )
 }
+// Add this style to the main div for debugging:
+// style={{ border: '2px solid red', background: 'yellow' }}

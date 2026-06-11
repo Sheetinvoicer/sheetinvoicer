@@ -4,6 +4,7 @@ import GlassSidebar from '@/components/GlassSidebar';
 import MobileMenu from '@/components/MobileMenu';
 import AIAssistant from '@/components/AIAssistant';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import VersionBadge from '@/components/VersionBadge';
 
 export default function DashboardLayout({ children }) {
   const isMobile = useMediaQuery('(max-width: 1024px)');
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children }) {
       </main>
       {isMobile && <MobileMenu />}
       <AIAssistant />
+      <VersionBadge />
     </div>
   );
 }

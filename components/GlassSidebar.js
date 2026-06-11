@@ -74,7 +74,7 @@ export default function GlassSidebar() {
             ))}
           </nav>
 
-          <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-2">
+          <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-2 overflow-visible">
             <LanguageSwitcher />
             
             <button

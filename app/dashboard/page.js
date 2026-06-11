@@ -312,3 +312,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+// Add this test badge at the top of your dashboard (after the welcome message)
+<div className="fixed bottom-4 left-4 z-50 bg-green-500 text-white px-3 py-1 rounded-full text-xs shadow-lg">
+  ✅ Deployment Active - {new Date().toLocaleTimeString()}
+</div>

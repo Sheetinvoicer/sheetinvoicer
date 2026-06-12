@@ -93,9 +93,15 @@ export default function GlassSidebar() {
   const [user, setUser] = useState(null)
   const [showTutorial, setShowTutorial] = useState(false)
   const [tutorialStep, setTutorialStep] = useState(0)
+  const [isClient, setIsClient] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+
+  // Fix hydration mismatch - set isClient to true after mount
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Spring animation for smooth sidebar motion
   const sidebarX = useMotionValue(isOpen ? 0 : -280)
@@ -105,13 +111,15 @@ export default function GlassSidebar() {
     sidebarX.set(isOpen ? 0 : -280)
   }, [isOpen, sidebarX])
 
-  // Check if user is new (first time)
+  // Check if user is new (first time) - with localStorage guard
   useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('sidebar-tutorial-seen')
-    if (!hasSeenTutorial && user) {
-      setTimeout(() => setShowTutorial(true), 1500)
+    if (isClient && user) {
+      const hasSeenTutorial = typeof localStorage !== 'undefined' ? localStorage.getItem('sidebar-tutorial-seen') : null
+      if (!hasSeenTutorial) {
+        setTimeout(() => setShowTutorial(true), 1500)
+      }
     }
-  }, [user])
+  }, [user, isClient])
 
   // Get current user
   useEffect(() => {
@@ -128,7 +136,8 @@ export default function GlassSidebar() {
   }
 
   const handleNavClick = () => {
-    if (window.innerWidth < 1024) {
+    // Guard for window object to prevent hydration mismatch
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setIsOpen(false)
     }
   }
@@ -136,7 +145,9 @@ export default function GlassSidebar() {
   const nextTutorial = () => {
     if (tutorialStep + 1 >= navItems.length) {
       setShowTutorial(false)
-      localStorage.setItem('sidebar-tutorial-seen', 'true')
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('sidebar-tutorial-seen', 'true')
+      }
     } else {
       setTutorialStep(tutorialStep + 1)
     }
@@ -144,7 +155,14 @@ export default function GlassSidebar() {
 
   const skipTutorial = () => {
     setShowTutorial(false)
-    localStorage.setItem('sidebar-tutorial-seen', 'true')
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('sidebar-tutorial-seen', 'true')
+    }
+  }
+
+  // Don't render until client-side to prevent hydration mismatch
+  if (!isClient) {
+    return null
   }
 
   return (

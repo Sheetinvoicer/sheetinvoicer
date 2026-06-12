@@ -2,28 +2,36 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { getAvailableLanguages, setLanguage, getCurrentLanguage } from '@/lib/i18n'
+
+const languages = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+]
 
 export default function LanguageSwitcher() {
   const [isClient, setIsClient] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [currentLang, setCurrentLang] = useState(null)
-  const languages = getAvailableLanguages()
+  const [currentLang, setCurrentLang] = useState(languages[0])
 
   useEffect(() => {
     setIsClient(true)
-    const savedLangCode = getCurrentLanguage()
-    const found = languages.find(l => l.code === savedLangCode)
-    setCurrentLang(found || languages[0])
+    const saved = localStorage.getItem('language')
+    if (saved) {
+      const found = languages.find(l => l.code === saved)
+      if (found) setCurrentLang(found)
+    }
   }, [])
 
   const switchLanguage = (lang) => {
     setCurrentLang(lang)
-    setLanguage(lang.code)  // This handles localStorage, RTL, and reload
+    localStorage.setItem('language', lang.code)
     setIsOpen(false)
+    window.location.reload()
   }
 
-  if (!isClient || !currentLang) {
+  if (!isClient) {
     return null
   }
 

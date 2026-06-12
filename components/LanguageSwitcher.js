@@ -11,10 +11,12 @@ const languages = [
 ]
 
 export default function LanguageSwitcher() {
+  const [isClient, setIsClient] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [currentLang, setCurrentLang] = useState(languages[0])
 
   useEffect(() => {
+    setIsClient(true)
     const saved = localStorage.getItem('language')
     if (saved) {
       const found = languages.find(l => l.code === saved)
@@ -27,6 +29,11 @@ export default function LanguageSwitcher() {
     localStorage.setItem('language', lang.code)
     setIsOpen(false)
     window.location.reload()
+  }
+
+  // Prevent hydration mismatch - don't render until client-side
+  if (!isClient) {
+    return null
   }
 
   return (
@@ -43,21 +50,18 @@ export default function LanguageSwitcher() {
       </button>
       
       {isOpen && (
-        <>
-          <div className="absolute left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-            {languages.map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => switchLanguage(lang)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <span className="text-lg">{lang.flag}</span>
-                <span className="text-sm">{lang.name}</span>
-              </button>
-            ))}
-          </div>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-        </>
+        <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+          {languages.map(lang => (
+            <button
+              key={lang.code}
+              onClick={() => switchLanguage(lang)}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            >
+              <span className="text-lg">{lang.flag}</span>
+              <span className="text-sm">{lang.name}</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )

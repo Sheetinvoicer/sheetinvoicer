@@ -2,37 +2,28 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-
-const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-]
+import { getAvailableLanguages, setLanguage, getCurrentLanguage } from '@/lib/i18n'
 
 export default function LanguageSwitcher() {
   const [isClient, setIsClient] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [currentLang, setCurrentLang] = useState(languages[0])
+  const [currentLang, setCurrentLang] = useState(null)
+  const languages = getAvailableLanguages()
 
   useEffect(() => {
     setIsClient(true)
-    const saved = localStorage.getItem('language')
-    if (saved) {
-      const found = languages.find(l => l.code === saved)
-      if (found) setCurrentLang(found)
-    }
+    const savedLangCode = getCurrentLanguage()
+    const found = languages.find(l => l.code === savedLangCode)
+    setCurrentLang(found || languages[0])
   }, [])
 
   const switchLanguage = (lang) => {
     setCurrentLang(lang)
-    localStorage.setItem('language', lang.code)
+    setLanguage(lang.code)  // This handles localStorage, RTL, and reload
     setIsOpen(false)
-    window.location.reload()
   }
 
-  // Prevent hydration mismatch - don't render until client-side
-  if (!isClient) {
+  if (!isClient || !currentLang) {
     return null
   }
 
@@ -50,7 +41,7 @@ export default function LanguageSwitcher() {
       </button>
       
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+        <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
           {languages.map(lang => (
             <button
               key={lang.code}

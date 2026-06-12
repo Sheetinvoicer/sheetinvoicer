@@ -1,5 +1,5 @@
 'use client';
-
+import { t } from '@/lib/i18n'
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -125,24 +125,24 @@ export default function DashboardPage() {
     setRevenueData(chartData);
     
     setStatusData([
-      { name: 'Paid', value: paidInvoices.length, color: '#10b981', link: '/dashboard/invoices?status=paid' },
-      { name: 'Pending', value: pendingInvoices.length, color: '#f59e0b', link: '/dashboard/invoices?status=pending' },
-      { name: 'Overdue', value: overdueInvoices.length, color: '#ef4444', link: '/dashboard/invoices?status=overdue' }
+      { name: t('paid'), value: paidInvoices.length, color: '#10b981', link: '/dashboard/invoices?status=paid' },
+      { name: t('pending'), value: pendingInvoices.length, color: '#f59e0b', link: '/dashboard/invoices?status=pending' },
+      { name: t('overdue'), value: overdueInvoices.length, color: '#ef4444', link: '/dashboard/invoices?status=overdue' }
     ]);
     
     setLoading(false);
   }
 
   if (loading) {
-    return <div className="p-8 text-center">Loading dashboard...</div>;
+    return <div className="p-8 text-center">{t('loading')}...</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">Welcome back! Here's your business overview.</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('dashboard')}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t('welcomeBack')}</p>
       </div>
 
       {/* Period Selector */}
@@ -153,95 +153,87 @@ export default function DashboardPage() {
             onClick={() => setSelectedPeriod(period)}
             className={`px-4 py-2 rounded-lg font-medium capitalize ${selectedPeriod === period ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 border'}`}
           >
-            {period}
+            {t(period)}
           </button>
         ))}
       </div>
 
-      {/* Stats Cards - EACH GOES TO DIFFERENT PAGE */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {/* Revenue → Invoices with paid filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Revenue</p>
+              <p className="text-gray-500 text-xs">{t('revenue')}</p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p>
             </div>
             <div className="text-2xl">💰</div>
           </div>
         </div>
         
-        {/* Net Profit → Reports page */}
         <div onClick={() => navigateTo('/dashboard/reports')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Net Profit</p>
+              <p className="text-gray-500 text-xs">{t('netProfit')}</p>
               <p className="text-xl font-bold text-green-600 dark:text-green-400">${stats.netProfit.toLocaleString()}</p>
             </div>
             <div className="text-2xl">📈</div>
           </div>
         </div>
         
-        {/* Pending → Invoices with pending filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'pending')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Pending</p>
+              <p className="text-gray-500 text-xs">{t('pending')}</p>
               <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">${stats.pendingAmount.toLocaleString()}</p>
             </div>
             <div className="text-2xl">⏳</div>
           </div>
         </div>
         
-        {/* Total Invoices → Invoices page */}
         <div onClick={() => navigateTo('/dashboard/invoices')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Invoices</p>
+              <p className="text-gray-500 text-xs">{t('totalInvoices')}</p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p>
             </div>
             <div className="text-2xl">📄</div>
           </div>
         </div>
         
-        {/* Paid Invoices → Invoices with paid filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Paid</p>
+              <p className="text-gray-500 text-xs">{t('paid')}</p>
               <p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p>
             </div>
             <div className="text-2xl">✅</div>
           </div>
         </div>
         
-        {/* Clients → Clients page */}
         <div onClick={() => navigateTo('/dashboard/clients')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Clients</p>
+              <p className="text-gray-500 text-xs">{t('clients')}</p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p>
             </div>
             <div className="text-2xl">👥</div>
           </div>
         </div>
         
-        {/* Overdue → Invoices with overdue filter */}
         <div onClick={() => navigateTo('/dashboard/invoices', 'overdue')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Overdue</p>
+              <p className="text-gray-500 text-xs">{t('overdue')}</p>
               <p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p>
             </div>
             <div className="text-2xl">⚠️</div>
           </div>
         </div>
         
-        {/* Expenses → Expenses page */}
         <div onClick={() => navigateTo('/dashboard/expenses')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
           <div className="flex justify-between">
             <div>
-              <p className="text-gray-500 text-xs">Expenses</p>
+              <p className="text-gray-500 text-xs">{t('expenses')}</p>
               <p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p>
             </div>
             <div className="text-2xl">💰</div>
@@ -252,7 +244,7 @@ export default function DashboardPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-          <h2 className="font-bold mb-3">Revenue Trend</h2>
+          <h2 className="font-bold mb-3">{t('revenueTrend')}</h2>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -265,7 +257,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-          <h2 className="font-bold mb-3">Invoice Status</h2>
+          <h2 className="font-bold mb-3">{t('invoiceStatus')}</h2>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
@@ -286,8 +278,8 @@ export default function DashboardPage() {
       {/* Recent Invoices */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="font-bold">Recent Invoices</h2>
-          <button onClick={() => navigateTo('/dashboard/invoices')} className="text-purple-600 text-sm">View All →</button>
+          <h2 className="font-bold">{t('recentInvoices')}</h2>
+          <button onClick={() => navigateTo('/dashboard/invoices')} className="text-purple-600 text-sm">{t('viewAll')} →</button>
         </div>
         <div className="space-y-2">
           {recentInvoices.map((inv, idx) => (
@@ -298,12 +290,12 @@ export default function DashboardPage() {
                 </span>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p>
-                  <p className="text-xs text-gray-500">Due: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p>
+                  <p className="text-xs text-gray-500">{t('due')}: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : t('na')}</p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p>
-                <p className={`text-xs ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status || 'draft'}</p>
+                <p className={`text-xs ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{t(inv.status || 'draft')}</p>
               </div>
             </div>
           ))}

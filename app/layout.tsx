@@ -6,11 +6,9 @@ import { LanguageProvider } from '@/lib/LanguageContext'
 
 export const metadata = {
   title: 'SheetInvoicer - AI-Powered Invoicing Platform',
-  description: 'Professional invoicing made simple with AI automation, 10+ currencies, and global payments',
+  description: 'Professional invoicing made simple with AI automation, 10+ currencies',
   keywords: 'invoicing, AI, payments, global business, automation, SaaS',
   authors: [{ name: 'SheetInvoicer' }],
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-  themeColor: '#8b5cf6',
   manifest: '/manifest.json',
   openGraph: {
     title: 'SheetInvoicer - AI-Powered Invoicing',
@@ -18,25 +16,15 @@ export const metadata = {
     url: 'https://www.sheetinvoicer.com',
     siteName: 'SheetInvoicer',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    locale: 'en_US',
     type: 'website',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'SheetInvoicer - AI-Powered Invoicing',
-    description: 'Professional invoicing made simple',
-    images: ['/og-image.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#8b5cf6',
 }
 
 export default function RootLayout({
@@ -46,19 +34,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="antialiased">
-        <ThemeProvider>
-          <LanguageProvider>
+      <body>
+        <LanguageProvider>
+          <ThemeProvider>
             {children}
             <Toaster position="top-right" />
             <Analytics />
-          </LanguageProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
-  );
+  )
 }

@@ -2,7 +2,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Use anon key ONLY - service_role key is dangerous and bypasses RLS!
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Missing Supabase credentials, using mock client');

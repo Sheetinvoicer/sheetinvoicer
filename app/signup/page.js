@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import toast, { Toaster } from 'react-hot-toast'
 import Footer from '@/components/Footer'
-import posthog from 'posthog-js'
+// import posthog from 'posthog-js'
 import Logo from '@/components/Logo'
 
 export default function SignupPage() {
@@ -52,7 +52,7 @@ export default function SignupPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      posthog.capture('user_signed_up', { email, has_name: !!name })
+      // posthog.capture('user_signed_up', { email, has_name: !!name })
       toast.success('Check your email for confirmation link!')
       setTimeout(() => router.push('/login'), 3000)
     }

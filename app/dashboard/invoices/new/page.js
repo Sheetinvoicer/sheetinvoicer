@@ -6,7 +6,7 @@ import CSVUploader from '@/components/CSVUploader'
 import ColumnMapper from '@/components/ColumnMapper'
 import { createClient } from '@/lib/supabase/client'
 import toast, { Toaster } from 'react-hot-toast'
-import posthog from 'posthog-js'
+// import posthog from 'posthog-js'
 import { canCreateInvoice } from '@/lib/subscription'
 import { generateInvoiceNumber } from '@/lib/invoiceNumber'
 
@@ -89,13 +89,13 @@ export default function NewInvoiceWizard() {
         }
       }
       
-      posthog.capture('invoice_created', { invoice_count: csvData.length, method: 'csv_upload' })
+      // posthog.capture('invoice_created', { invoice_count: csvData.length, method: 'csv_upload' })
       toast.success('Invoices created successfully!')
       setTimeout(() => {
         router.push('/dashboard/invoices')
       }, 1500)
     } catch (error) {
-      posthog.captureException(error, { event: 'invoice_create_error' })
+      // // posthog.captureException(error, { event: 'invoice_create_error' })
       toast.error('Error creating invoices: ' + error.message)
     } finally {
       setProcessing(false)

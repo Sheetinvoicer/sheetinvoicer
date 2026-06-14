@@ -1,0 +1,231 @@
+Vercel CLI 54.11.1 (Node.js 20.20.2)
+Retrieving project…
+Deploying feras-alfanatseh/sheetinvoicer
+Uploading [--------------------] (0.0B/100B)
+Uploading [====================] (100.0B/100B)
+  Inspect     https://vercel.com/feras-alfanatseh/sheetinvoicer/7Tzn1ohtjMkQzKA9mGqqrD6ZPi9r
+▲ Production  https://sheetinvoicer-hetl9y55k-feras-alfanatseh.vercel.app
+https://sheetinvoicer-hetl9y55k-feras-alfanatseh.vercel.appBuilding…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 4 cores, 8 GB
+Retrieving list of deployment files...
+Retrieving list of deployment files...
+Downloading 218 deployment files...
+Restored build cache from previous deployment (8ThJobqegaEwG5kQfd7bmAESNwpq)
+Running "vercel build"
+Running "install" command: `npm install`...
+up to date, audited 965 packages in 4s
+219 packages are looking for funding
+run `npm fund` for details
+8 vulnerabilities (6 moderate, 2 high)
+To address all issues possible (including breaking changes), run:
+npm audit fix --force
+Some issues need review, and may require choosing
+a different dependency.
+Run `npm audit` for details.
+Detected Next.js version: 16.2.6
+Running "npm run build"
+> sheetinvoicer@0.1.0 build
+> next build
+Applying modifyConfig from Vercel
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.production
+Creating an optimized production build ...
+✓ Compiled successfully in 19.2s
+Running TypeScript ...
+Finished TypeScript in 5.0s ...
+Collecting page data using 3 workers ...
+Generating static pages using 3 workers (0/58) ...
+Generating static pages using 3 workers (14/58)
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /clients. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /clients. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /api-docs. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /api-docs. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/clients. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/clients. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/recurring. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/recurring. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Generating static pages using 3 workers (28/58)
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/estimates/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/estimates/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/settings/currency. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/settings/currency. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/estimates. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/estimates. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/settings. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/settings. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/reports. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reports. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/settings/reminders. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/settings/reminders. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/subscription. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/subscription. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/subscription/success. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/subscription/success. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/expenses/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/expenses/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/expenses. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/expenses. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/invoices/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/invoices/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/invoices. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/invoices. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Generating static pages using 3 workers (43/58)
+⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /pricing. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /pricing. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /privacy. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /privacy. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /sentry-example-page. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /sentry-example-page. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /signup. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /signup. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /terms. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /terms. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /test-language. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /test-language. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata viewport is configured in metadata export in /update-password. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+⚠ Unsupported metadata themeColor is configured in metadata export in /update-password. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+✓ Generating static pages using 3 workers (58/58) in 917ms
+Finalizing page optimization ...
+Running onBuildComplete from Vercel
+Detected .env file, it is strongly recommended to use Vercel's env handling instead
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /api-docs
+├ ƒ /api/agents/chat
+├ ƒ /api/ai/action
+├ ƒ /api/auth/reset-password
+├ ƒ /api/auth/session
+├ ƒ /api/auth/welcome-email
+├ ƒ /api/clients
+├ ƒ /api/cron/generate-recurring
+├ ƒ /api/cron/send-reminders
+├ ƒ /api/currency-settings
+├ ƒ /api/discount
+├ ƒ /api/estimates
+├ ƒ /api/estimates/[id]
+├ ƒ /api/estimates/[id]/convert
+├ ƒ /api/expenses
+├ ƒ /api/export
+├ ƒ /api/health
+├ ƒ /api/ingest
+├ ƒ /api/invoices
+├ ƒ /api/invoices/send-magic-link
+├ ƒ /api/portal/invoice
+├ ƒ /api/reminders
+├ ƒ /api/send-invoice
+├ ƒ /api/sentry-example-api
+├ ƒ /api/stripe/calculate-tax
+├ ƒ /api/stripe/create-checkout
+├ ƒ /api/stripe/create-subscription
+├ ƒ /api/stripe/portal
+├ ƒ /api/stripe/refund
+├ ƒ /api/stripe/webhook
+├ ƒ /api/tax-rates
+├ ƒ /api/test
+├ ƒ /api/test-cron
+├ ƒ /api/webhooks/master
+├ ○ /clients
+├ ○ /dashboard
+├ ○ /dashboard/clients
+├ ƒ /dashboard/clients/[id]
+├ ○ /dashboard/estimates
+├ ƒ /dashboard/estimates/[id]
+├ ○ /dashboard/estimates/new
+├ ○ /dashboard/expenses
+├ ○ /dashboard/expenses/new
+├ ○ /dashboard/invoices
+├ ƒ /dashboard/invoices/[id]
+├ ƒ /dashboard/invoices/[id]/edit
+├ ○ /dashboard/invoices/new
+├ ○ /dashboard/recurring
+├ ○ /dashboard/reports
+├ ○ /dashboard/settings
+├ ○ /dashboard/settings/currency
+├ ○ /dashboard/settings/reminders
+├ ○ /dashboard/subscription
+├ ○ /dashboard/subscription/success
+├ ○ /login
+├ ƒ /pay/[id]
+├ ƒ /portal/[token]
+├ ○ /pricing
+├ ○ /privacy
+├ ○ /sentry-example-page
+├ ○ /signup
+├ ○ /terms
+├ ○ /test-language
+└ ○ /update-password
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+Build Completed in /vercel/output [33s]
+Deploying outputs...
+Deployment completed
+Creating build cache...
+[2K[1A[2K[G▲ Production  https://sheetinvoicer-hetl9y55k-feras-alfanatseh.vercel.app
+Completing…
+▲ Aliased     https://sheetinvoicer-feras-alfanatseh.vercel.app
+
+✓ Ready in 52s

@@ -1,12 +1,12 @@
+import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
-import { getPostHogClient } from '@/lib/posthog-server'
+// import { getPostHogClient } from '@/lib/posthog-server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-export async function POST(request) {
-  const body = await request.text()
-  const sig = request.headers.get('stripe-signature')
+export async function POST(req) {
+  const body = await req.text()
+  const sig = req.headers.get('stripe-signature')
 
   let event
 
@@ -17,73 +17,44 @@ export async function POST(request) {
       process.env.STRIPE_WEBHOOK_SECRET
     )
   } catch (err) {
-    return Response.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object
-    const userId = session.metadata.userId
-    const customerId = session.customer
-    const subscriptionId = session.subscription
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object
+      const userId = session.client_reference_id
+      const planTier = session.metadata?.planTier
+      const priceId = session.metadata?.priceId
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-    const priceId = subscription.items.data[0].price.id
+      // const posthog = getPostHogClient()
+      // posthog.capture({
+      //   distinctId: userId,
+      //   event: 'subscription_checkout_completed',
+      //   properties: { plan_tier: planTier, price_id: priceId },
+      // })
+      // await posthog.shutdown()
 
-    let planTier = 'free'
-    if (priceId === process.env.STRIPE_BASIC_PRICE_ID) {
-      planTier = 'basic'
+      break
     }
+    case 'customer.subscription.updated': {
+      const subscription = event.data.object
+      const userId = subscription.metadata?.userId
 
-    const supabase = createClient()
+      // const posthog = getPostHogClient()
+      // posthog.capture({
+      //   distinctId: userId,
+      //   event: 'subscription_updated',
+      //   properties: { status: subscription.status },
+      // })
+      // await posthog.shutdown()
 
-    await supabase
-      .from('users')
-      .update({
-        plan_tier: planTier,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscriptionId,
-        subscription_status: 'active',
-        subscription_ends_at: new Date(subscription.current_period_end * 1000).toISOString()
-      })
-      .eq('id', userId)
-
-    const posthog = getPostHogClient()
-    posthog.capture({
-      distinctId: userId,
-      event: 'subscription_checkout_completed',
-      properties: { plan_tier: planTier, price_id: priceId },
-    })
-    await posthog.shutdown()
-  }
-
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object
-    const supabase = createClient()
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('stripe_subscription_id', subscription.id)
-      .single()
-
-    await supabase
-      .from('users')
-      .update({
-        plan_tier: 'free',
-        stripe_subscription_id: null,
-        subscription_status: 'canceled'
-      })
-      .eq('stripe_subscription_id', subscription.id)
-
-    if (userData?.id) {
-      const posthog = getPostHogClient()
-      posthog.capture({
-        distinctId: userData.id,
-        event: 'subscription_canceled',
-      })
-      await posthog.shutdown()
+      break
     }
+    default:
+      console.log(`Unhandled event type ${event.type}`)
   }
 
-  return Response.json({ received: true })
+  return NextResponse.json({ received: true })
 }

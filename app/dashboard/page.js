@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { t } from '@/lib/i18n';
-import { Tooltip } from '@/components/Tooltip';
+import { Tooltip, TooltipProvider } from '@/components/Tooltip';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { 
@@ -79,7 +79,6 @@ export default function DashboardPage() {
       
       setRecentInvoices(invoices.slice(0, 5));
       
-      // Calculate chart data based on selectedPeriod
       let chartData = [];
       const now = new Date();
       
@@ -139,274 +138,278 @@ export default function DashboardPage() {
   // Loading Skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
-        <div className="mb-8">
-          <Skeleton height={40} width={200} className="mb-2" />
-          <Skeleton height={20} width={300} />
-        </div>
-        <div className="flex gap-2 mb-6">
-          <Skeleton height={40} width={80} />
-          <Skeleton height={40} width={80} />
-          <Skeleton height={40} width={80} />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-              <Skeleton height={15} width={60} className="mb-2" />
-              <Skeleton height={30} width={100} />
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-            <Skeleton height={20} width={150} className="mb-4" />
-            <Skeleton height={250} />
+      <TooltipProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
+          <div className="mb-8">
+            <Skeleton height={40} width={200} className="mb-2" />
+            <Skeleton height={20} width={300} />
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-            <Skeleton height={20} width={150} className="mb-4" />
-            <Skeleton height={250} />
+          <div className="flex gap-2 mb-6">
+            <Skeleton height={40} width={80} />
+            <Skeleton height={40} width={80} />
+            <Skeleton height={40} width={80} />
           </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-          <div className="flex justify-between mb-3">
-            <Skeleton height={20} width={150} />
-            <Skeleton height={16} width={80} />
-          </div>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex justify-between items-center p-3 border-b border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-3">
-                <Skeleton circle width={40} height={40} />
-                <div>
-                  <Skeleton height={16} width={120} />
-                  <Skeleton height={12} width={80} className="mt-1" />
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+                <Skeleton height={15} width={60} className="mb-2" />
+                <Skeleton height={30} width={100} />
               </div>
-              <Skeleton height={20} width={100} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+              <Skeleton height={20} width={150} className="mb-4" />
+              <Skeleton height={250} />
             </div>
-          ))}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+              <Skeleton height={20} width={150} className="mb-4" />
+              <Skeleton height={250} />
+            </div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+            <div className="flex justify-between mb-3">
+              <Skeleton height={20} width={150} />
+              <Skeleton height={16} width={80} />
+            </div>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex justify-between items-center p-3 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Skeleton circle width={40} height={40} />
+                  <div>
+                    <Skeleton height={16} width={120} />
+                    <Skeleton height={12} width={80} className="mt-1" />
+                  </div>
+                </div>
+                <Skeleton height={20} width={100} />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
     );
   }
 
   const hasData = stats.totalInvoices > 0 || stats.totalRevenue > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">Welcome back! Here's your business overview.</p>
-      </div>
-
-      {/* Period Selector */}
-      <div className="flex gap-2 mb-6">
-        {['week', 'month', 'year'].map(period => (
-          <button
-            key={period}
-            onClick={() => setSelectedPeriod(period)}
-            className={`px-4 py-2 rounded-lg font-medium capitalize transition-all ${
-              selectedPeriod === period 
-                ? 'bg-purple-600 text-white shadow-md' 
-                : 'bg-white dark:bg-gray-800 border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            {period}
-          </button>
-        ))}
-      </div>
-
-      {/* Stats Cards with Empty State */}
-      {!hasData ? (
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl border border-purple-200 dark:border-purple-800 p-8 md:p-12 text-center mb-8">
-          <div className="text-7xl mb-4">📭</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No data yet</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md mx-auto">
-            Create your first invoice to see your business metrics and dashboard statistics.
-          </p>
-          <button 
-            onClick={() => navigateTo('/dashboard/invoices/new')}
-            className="bg-purple-600 text-white px-5 py-2.5 rounded-lg hover:bg-purple-700 transition-colors shadow-md"
-          >
-            + Create Your First Invoice
-          </button>
+    <TooltipProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Welcome back! Here's your business overview.</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Tooltip content="Total revenue from all paid invoices">
-            <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Revenue</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="text-2xl">💰</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="Revenue minus expenses = your profit">
-            <div onClick={() => navigateTo('/dashboard/reports')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Net Profit</p>
-                  <p className="text-xl font-bold text-green-600">${stats.netProfit.toLocaleString()}</p>
-                </div>
-                <div className="text-2xl">📈</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="Invoices waiting for payment">
-            <div onClick={() => navigateTo('/dashboard/invoices', 'pending')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Pending</p>
-                  <p className="text-xl font-bold text-yellow-600">${stats.pendingAmount.toLocaleString()}</p>
-                </div>
-                <div className="text-2xl">⏳</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="All invoices created">
-            <div onClick={() => navigateTo('/dashboard/invoices')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Invoices</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p>
-                </div>
-                <div className="text-2xl">📄</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="Invoices that have been paid">
-            <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Paid</p>
-                  <p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p>
-                </div>
-                <div className="text-2xl">✅</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="Total clients in your database">
-            <div onClick={() => navigateTo('/dashboard/clients')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Clients</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p>
-                </div>
-                <div className="text-2xl">👥</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="Invoices past due date">
-            <div onClick={() => navigateTo('/dashboard/invoices', 'overdue')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Overdue</p>
-                  <p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p>
-                </div>
-                <div className="text-2xl">⚠️</div>
-              </div>
-            </div>
-          </Tooltip>
-          
-          <Tooltip content="Total business expenses">
-            <div onClick={() => navigateTo('/dashboard/expenses')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wide">Expenses</p>
-                  <p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p>
-                </div>
-                <div className="text-2xl">💰</div>
-              </div>
-            </div>
-          </Tooltip>
-        </div>
-      )}
 
-      {/* Charts - Only show if there's data */}
-      {hasData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-            <h2 className="font-bold mb-3">Revenue Trend</h2>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <RechartsTooltip />
-                <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-            <h2 className="font-bold mb-3">Invoice Status</h2>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
-                  {statusData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} style={{ cursor: 'pointer' }} onClick={() => navigateTo(entry.link)} />
-                  ))}
-                </Pie>
-                <RechartsTooltip />
-                <Legend onClick={(e) => {
-                  const item = statusData.find(d => d.name === e.value);
-                  if (item) navigateTo(item.link);
-                }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        {/* Period Selector */}
+        <div className="flex gap-2 mb-6">
+          {['week', 'month', 'year'].map(period => (
+            <button
+              key={period}
+              onClick={() => setSelectedPeriod(period)}
+              className={`px-4 py-2 rounded-lg font-medium capitalize transition-all ${
+                selectedPeriod === period 
+                  ? 'bg-purple-600 text-white shadow-md' 
+                  : 'bg-white dark:bg-gray-800 border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              {period}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* Recent Invoices */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="font-bold">Recent Invoices</h2>
-          <button onClick={() => navigateTo('/dashboard/invoices')} className="text-purple-600 text-sm hover:text-purple-700 transition-colors">
-            View All →
-          </button>
-        </div>
-        {recentInvoices.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-2">📄</div>
-            <p className="text-gray-500">No invoices yet</p>
+        {/* Stats Cards with Empty State */}
+        {!hasData ? (
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl border border-purple-200 dark:border-purple-800 p-8 md:p-12 text-center mb-8">
+            <div className="text-7xl mb-4">📭</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No data yet</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md mx-auto">
+              Create your first invoice to see your business metrics and dashboard statistics.
+            </p>
             <button 
               onClick={() => navigateTo('/dashboard/invoices/new')}
-              className="mt-2 text-purple-600 hover:text-purple-700 text-sm"
+              className="bg-purple-600 text-white px-5 py-2.5 rounded-lg hover:bg-purple-700 transition-colors shadow-md"
             >
-              Create your first invoice →
+              + Create Your First Invoice
             </button>
           </div>
         ) : (
-          <div className="space-y-2">
-            {recentInvoices.map((inv, idx) => (
-              <div key={idx} onClick={() => navigateTo(`/dashboard/invoices/${inv.id}`)} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
-                <div className="flex items-center gap-3">
-                  <span className={`text-2xl ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
-                    {inv.status === 'paid' ? '✅' : '📄'}
-                  </span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Tooltip content="Total revenue from all paid invoices">
+              <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p>
-                    <p className="text-xs text-gray-500">Due: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Revenue</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p>
-                  <p className={`text-xs font-medium ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status || 'draft'}</p>
+                  <div className="text-2xl">💰</div>
                 </div>
               </div>
-            ))}
+            </Tooltip>
+            
+            <Tooltip content="Revenue minus expenses = your profit">
+              <div onClick={() => navigateTo('/dashboard/reports')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Net Profit</p>
+                    <p className="text-xl font-bold text-green-600">${stats.netProfit.toLocaleString()}</p>
+                  </div>
+                  <div className="text-2xl">📈</div>
+                </div>
+              </div>
+            </Tooltip>
+            
+            <Tooltip content="Invoices waiting for payment">
+              <div onClick={() => navigateTo('/dashboard/invoices', 'pending')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Pending</p>
+                    <p className="text-xl font-bold text-yellow-600">${stats.pendingAmount.toLocaleString()}</p>
+                  </div>
+                  <div className="text-2xl">⏳</div>
+                </div>
+              </div>
+            </Tooltip>
+            
+            <Tooltip content="All invoices created">
+              <div onClick={() => navigateTo('/dashboard/invoices')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Invoices</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p>
+                  </div>
+                  <div className="text-2xl">📄</div>
+                </div>
+              </div>
+            </Tooltip>
+            
+            <Tooltip content="Invoices that have been paid">
+              <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Paid</p>
+                    <p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p>
+                  </div>
+                  <div className="text-2xl">✅</div>
+                </div>
+              </div>
+            </Tooltip>
+            
+            <Tooltip content="Total clients in your database">
+              <div onClick={() => navigateTo('/dashboard/clients')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Clients</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p>
+                  </div>
+                  <div className="text-2xl">👥</div>
+                </div>
+              </div>
+            </Tooltip>
+            
+            <Tooltip content="Invoices past due date">
+              <div onClick={() => navigateTo('/dashboard/invoices', 'overdue')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Overdue</p>
+                    <p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p>
+                  </div>
+                  <div className="text-2xl">⚠️</div>
+                </div>
+              </div>
+            </Tooltip>
+            
+            <Tooltip content="Total business expenses">
+              <div onClick={() => navigateTo('/dashboard/expenses')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Expenses</p>
+                    <p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p>
+                  </div>
+                  <div className="text-2xl">💰</div>
+                </div>
+              </div>
+            </Tooltip>
           </div>
         )}
+
+        {/* Charts - Only show if there's data */}
+        {hasData && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+              <h2 className="font-bold mb-3">Revenue Trend</h2>
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+              <h2 className="font-bold mb-3">Invoice Status</h2>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
+                    {statusData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} style={{ cursor: 'pointer' }} onClick={() => navigateTo(entry.link)} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend onClick={(e) => {
+                    const item = statusData.find(d => d.name === e.value);
+                    if (item) navigateTo(item.link);
+                  }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Invoices */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-bold">Recent Invoices</h2>
+            <button onClick={() => navigateTo('/dashboard/invoices')} className="text-purple-600 text-sm hover:text-purple-700 transition-colors">
+              View All →
+            </button>
+          </div>
+          {recentInvoices.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">📄</div>
+              <p className="text-gray-500">No invoices yet</p>
+              <button 
+                onClick={() => navigateTo('/dashboard/invoices/new')}
+                className="mt-2 text-purple-600 hover:text-purple-700 text-sm"
+              >
+                Create your first invoice →
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentInvoices.map((inv, idx) => (
+                <div key={idx} onClick={() => navigateTo(`/dashboard/invoices/${inv.id}`)} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-2xl ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
+                      {inv.status === 'paid' ? '✅' : '📄'}
+                    </span>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p>
+                      <p className="text-xs text-gray-500">Due: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p>
+                    <p className={`text-xs font-medium ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status || 'draft'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

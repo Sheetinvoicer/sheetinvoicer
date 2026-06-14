@@ -53,7 +53,7 @@ export default function Sidebar() {
           <Logo />
         </div>
         
-        <nav className="space-y-1">
+        <nav className="space-y-1 sidebar-nav">
           {navItems.map((item) => (
             <Link
               key={item.name}

@@ -16,6 +16,7 @@ export default function DashboardLayout({ children }) {
       </main>
       {isMobile && <MobileMenu />}
       <AIAssistant />
-    </div>
+    <OnboardingTour />
+      </div>
   );
 }

@@ -81,6 +81,18 @@ export default function InvoiceDetailPage({ params }) {
       toast.error('Error updating status')
     } else {
       toast.success(`Invoice marked as ${newStatus}`)
+      
+      // Log activity for payment status change
+      if (newStatus === 'paid') {
+        const { data: { user } } = await supabase.auth.getUser()
+        await supabase.from('activity_logs').insert({
+          user_id: user.id,
+          type: 'invoice_paid',
+          description: `Invoice #${invoice.invoice_number} was marked as paid`,
+          reference_id: invoiceId
+        })
+      }
+      
       const { data } = await supabase
         .from('invoices')
         .select('*, clients(*)')

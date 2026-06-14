@@ -3,20 +3,38 @@
 import Sidebar from '@/components/Sidebar';
 import MobileMenu from '@/components/MobileMenu';
 import AIAssistant from '@/components/AIAssistant';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({ children }) {
-  const isMobile = useMediaQuery('(max-width: 1024px)');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {!isMobile && <Sidebar />}
-      <main className={!isMobile ? 'lg:ml-72' : 'pb-20'}>
-        {children}
-      </main>
-      {isMobile && <MobileMenu />}
-      <AIAssistant />
-    <OnboardingTour />
+      {/* Sidebar - visible on desktop */}
+      <div className="hidden lg:block">
+        <Sidebar />
       </div>
+      
+      {/* Mobile menu - only shown on mobile */}
+      {isMobile && <MobileMenu />}
+      
+      {/* Main content */}
+      <main className="lg:ml-72">
+        <div className="p-4 md:p-6">
+          {children}
+        </div>
+      </main>
+      
+      <AIAssistant />
+    </div>
   );
 }

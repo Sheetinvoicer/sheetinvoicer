@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { getAvailableLanguages, setLanguage, getCurrentLanguage, t } from '@/app/lib/i18n'
+import { getAvailableLanguages, setLanguage, getCurrentLanguage, t } from '/i18n.js';
 
 export default function LanguageSwitcher() {
   const [isClient, setIsClient] = useState(false)

@@ -2,7 +2,6 @@ import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from 'react-hot-toast'
-import { LanguageProvider } from '@/lib/LanguageContext'
 
 export const metadata = {
   title: 'SheetInvoicer - AI-Powered Invoicing Platform',
@@ -35,16 +34,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <div style={{ background: 'yellow', padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>
-          🚀 TEST VERSION - DEPLOYMENT WORKING! 🚀
-        </div>
-        <LanguageProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster position="top-right" />
-            <Analytics />
-          </ThemeProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster position="top-right" />
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )

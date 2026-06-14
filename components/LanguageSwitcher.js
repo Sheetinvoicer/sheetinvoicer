@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'en', name: 'English', flag: '🇺🇸', nativeName: 'English' },
+  { code: 'es', name: 'Spanish', flag: '🇪🇸', nativeName: 'Español' },
+  { code: 'fr', name: 'French', flag: '🇫🇷', nativeName: 'Français' },
+  { code: 'ar', name: 'Arabic', flag: '🇸🇦', nativeName: 'العربية' },
 ]
 
 export default function LanguageSwitcher() {
@@ -39,25 +39,30 @@ export default function LanguageSwitcher() {
     <div className="relative w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left"
+        className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left transition-all duration-200"
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">{currentLang.flag}</span>
-          <span className="text-sm">{currentLang.name}</span>
+          <span className="text-sm font-medium">{currentLang.nativeName}</span>
         </div>
-        <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-          {languages.map(lang => (
+        <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+          {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => switchLanguage(lang)}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${
+                currentLang.code === lang.code ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+              }`}
             >
               <span className="text-lg">{lang.flag}</span>
-              <span className="text-sm">{lang.name}</span>
+              <span className="text-sm">{lang.nativeName}</span>
+              {currentLang.code === lang.code && (
+                <span className="ml-auto text-blue-600">✓</span>
+              )}
             </button>
           ))}
         </div>

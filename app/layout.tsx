@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body><div style="background: yellow; padding: 10px; text-align: center; font-weight: bold; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">🚀 TEST VERSION - DEPLOYMENT WORKING! 🚀</div>
         <LanguageProvider>
           <ThemeProvider>
             {children}

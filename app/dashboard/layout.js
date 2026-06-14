@@ -19,20 +19,23 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar - visible on desktop */}
-      <div className="hidden lg:block">
+      {/* Sidebar - fixed position on desktop */}
+      <div className="hidden lg:block fixed left-0 top-0 h-full z-30">
         <Sidebar />
       </div>
       
-      {/* Mobile menu - only shown on mobile */}
-      {isMobile && <MobileMenu />}
-      
-      {/* Main content */}
-      <main className="lg:ml-72">
-        <div className="p-4 md:p-6">
-          {children}
-        </div>
-      </main>
+      {/* Main content - pushes right to account for sidebar */}
+      <div className="lg:ml-72">
+        {/* Mobile menu button - only on mobile */}
+        {isMobile && <MobileMenu />}
+        
+        {/* Main content area */}
+        <main className="min-h-screen">
+          <div className="p-4 md:p-6">
+            {children}
+          </div>
+        </main>
+      </div>
       
       <AIAssistant />
     </div>

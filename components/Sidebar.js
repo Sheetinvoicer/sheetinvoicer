@@ -28,7 +28,6 @@ export default function Sidebar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { name: '🌐 Language', href: '#', icon: '🌐' },
     { name: 'Invoices', href: '/dashboard/invoices', icon: '📄' },
     { name: 'Clients', href: '/dashboard/clients', icon: '👥' },
     { name: 'Expenses', href: '/dashboard/expenses', icon: '💰' },
@@ -73,6 +72,11 @@ export default function Sidebar() {
         </nav>
 
         <div className="absolute bottom-6 left-6 right-6 space-y-2">
+          {/* LanguageSwitcher */}
+          <div className="mb-2">
+            <LanguageSwitcher />
+          </div>
+
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
@@ -100,10 +104,3 @@ export default function Sidebar() {
     </>
   )
 }
-
-// Add this line after the nav items in the sidebar component
-// Look for the closing </nav> tag and add before it
-
-<div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-  <LanguageSwitcher />
-</div>

@@ -2,48 +2,40 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-
-const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸', nativeName: 'English' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸', nativeName: 'Español' },
-  { code: 'fr', name: 'French', flag: '🇫🇷', nativeName: 'Français' },
-  { code: 'ar', name: 'Arabic', flag: '🇸🇦', nativeName: 'العربية' },
-]
+import { getAvailableLanguages, setLanguage, getCurrentLanguage, t } from '@/lib/i18n'
 
 export default function LanguageSwitcher() {
   const [isClient, setIsClient] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [currentLang, setCurrentLang] = useState(languages[0])
+  const [currentLang, setCurrentLang] = useState(null)
+  const languages = getAvailableLanguages()
 
   useEffect(() => {
     setIsClient(true)
-    const saved = localStorage.getItem('app-language')
-    if (saved) {
-      const found = languages.find(l => l.code === saved)
-      if (found) setCurrentLang(found)
-    }
+    const savedLangCode = getCurrentLanguage()
+    const found = languages.find(l => l.code === savedLangCode)
+    setCurrentLang(found || languages[0])
   }, [])
 
   const switchLanguage = (lang) => {
     setCurrentLang(lang)
-    localStorage.setItem('app-language', lang.code)
+    setLanguage(lang.code)
     setIsOpen(false)
-    window.location.reload()
   }
 
-  if (!isClient) {
+  if (!isClient || !currentLang) {
     return null
   }
 
   return (
-    <div className="relative w-full language-switcher">
+    <div className="relative w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left transition-all duration-200"
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">{currentLang.flag}</span>
-          <span className="text-sm font-medium">{currentLang.nativeName}</span>
+          <span className="text-sm font-medium">{currentLang.name}</span>
         </div>
         <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -55,13 +47,13 @@ export default function LanguageSwitcher() {
               key={lang.code}
               onClick={() => switchLanguage(lang)}
               className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${
-                currentLang.code === lang.code ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                currentLang.code === lang.code ? 'bg-purple-50 dark:bg-purple-900/20' : ''
               }`}
             >
               <span className="text-lg">{lang.flag}</span>
-              <span className="text-sm">{lang.nativeName}</span>
+              <span className="text-sm">{lang.name}</span>
               {currentLang.code === lang.code && (
-                <span className="ml-auto text-blue-600">✓</span>
+                <span className="ml-auto text-purple-600">✓</span>
               )}
             </button>
           ))}

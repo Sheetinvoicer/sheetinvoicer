@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { getAvailableLanguages, setLanguage, getCurrentLanguage, t } from '@/lib/i18n';
+import { getAvailableLanguages, setLanguage, getCurrentLanguage } from '@/lib/i18n'
 
 export default function LanguageSwitcher() {
-  const [isClient, setIsClient] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [currentLang, setCurrentLang] = useState(null)
   const languages = getAvailableLanguages()
 
   useEffect(() => {
-    setIsClient(true)
     const savedLangCode = getCurrentLanguage()
     const found = languages.find(l => l.code === savedLangCode)
     setCurrentLang(found || languages[0])
@@ -20,10 +18,9 @@ export default function LanguageSwitcher() {
   const switchLanguage = (lang) => {
     setCurrentLang(lang)
     setLanguage(lang.code)
-    setIsOpen(false)
   }
 
-  if (!isClient || !currentLang) {
+  if (!currentLang) {
     return null
   }
 

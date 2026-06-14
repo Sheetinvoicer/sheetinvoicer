@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { t } from '@/lib/i18n';
+import { t } from '@/app/lib/i18n';
 import { Tooltip, TooltipProvider } from '@/components/Tooltip';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -118,9 +118,9 @@ export default function DashboardPage() {
       setRevenueData(chartData);
       
       setStatusData([
-        { name: 'Paid', value: paidInvoices.length, color: '#10b981', link: '/dashboard/invoices?status=paid' },
-        { name: 'Pending', value: pendingInvoices.length, color: '#f59e0b', link: '/dashboard/invoices?status=pending' },
-        { name: 'Overdue', value: overdueInvoices.length, color: '#ef4444', link: '/dashboard/invoices?status=overdue' }
+        { name: t('paid'), value: paidInvoices.length, color: '#10b981', link: '/dashboard/invoices?status=paid' },
+        { name: t('pending'), value: pendingInvoices.length, color: '#f59e0b', link: '/dashboard/invoices?status=pending' },
+        { name: t('overdue'), value: overdueInvoices.length, color: '#ef4444', link: '/dashboard/invoices?status=overdue' }
       ]);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -140,7 +140,7 @@ export default function DashboardPage() {
         <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading your dashboard...</p>
+            <p className="text-gray-500">{t('loading')}...</p>
           </div>
         </div>
       </TooltipProvider>
@@ -153,8 +153,8 @@ export default function DashboardPage() {
     <TooltipProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Welcome back! Here's your business overview.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('dashboard')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">{t('welcomeBack')}</p>
         </div>
 
         {/* Period Selector */}
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                   : 'bg-white dark:bg-gray-800 border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
-              {period}
+              {t(period)}
             </button>
           ))}
         </div>
@@ -178,15 +178,15 @@ export default function DashboardPage() {
         {!hasData ? (
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl border border-purple-200 dark:border-purple-800 p-8 md:p-12 text-center mb-8">
             <div className="text-7xl mb-4">📭</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No data yet</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{t('noInvoices')}</h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md mx-auto">
-              Create your first invoice to see your business metrics and dashboard statistics.
+              {t('createFirstInvoice')}
             </p>
             <button 
               onClick={() => navigateTo('/dashboard/invoices/new')}
               className="bg-purple-600 text-white px-5 py-2.5 rounded-lg hover:bg-purple-700 transition-colors shadow-md"
             >
-              + Create Your First Invoice
+              + {t('createInvoice')}
             </button>
           </div>
         ) : (
@@ -195,7 +195,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Revenue</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('revenue')}</p>
                     <p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p>
                   </div>
                   <div className="text-2xl">💰</div>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/reports')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Net Profit</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('netProfit')}</p>
                     <p className="text-xl font-bold text-green-600">${stats.netProfit.toLocaleString()}</p>
                   </div>
                   <div className="text-2xl">📈</div>
@@ -219,7 +219,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/invoices', 'pending')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Pending</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('pending')}</p>
                     <p className="text-xl font-bold text-yellow-600">${stats.pendingAmount.toLocaleString()}</p>
                   </div>
                   <div className="text-2xl">⏳</div>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/invoices')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Invoices</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('totalInvoices')}</p>
                     <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p>
                   </div>
                   <div className="text-2xl">📄</div>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Paid</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('paid')}</p>
                     <p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p>
                   </div>
                   <div className="text-2xl">✅</div>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/clients')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Clients</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('clients')}</p>
                     <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p>
                   </div>
                   <div className="text-2xl">👥</div>
@@ -267,7 +267,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/invoices', 'overdue')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Overdue</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('overdue')}</p>
                     <p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p>
                   </div>
                   <div className="text-2xl">⚠️</div>
@@ -279,7 +279,7 @@ export default function DashboardPage() {
               <div onClick={() => navigateTo('/dashboard/expenses')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]">
                 <div className="flex justify-between">
                   <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide">Expenses</p>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">{t('expenses')}</p>
                     <p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p>
                   </div>
                   <div className="text-2xl">💰</div>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
         {hasData && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-              <h2 className="font-bold mb-3">Revenue Trend</h2>
+              <h2 className="font-bold mb-3">{t('revenueTrend')}</h2>
               <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={revenueData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -306,7 +306,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-              <h2 className="font-bold mb-3">Invoice Status</h2>
+              <h2 className="font-bold mb-3">{t('invoiceStatus')}</h2>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
@@ -328,20 +328,20 @@ export default function DashboardPage() {
         {/* Recent Invoices */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-bold">Recent Invoices</h2>
+            <h2 className="font-bold">{t('recentInvoices')}</h2>
             <button onClick={() => navigateTo('/dashboard/invoices')} className="text-purple-600 text-sm hover:text-purple-700 transition-colors">
-              View All →
+              {t('viewAll')} →
             </button>
           </div>
           {recentInvoices.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📄</div>
-              <p className="text-gray-500">No invoices yet</p>
+              <p className="text-gray-500">{t('noInvoices')}</p>
               <button 
                 onClick={() => navigateTo('/dashboard/invoices/new')}
                 className="mt-2 text-purple-600 hover:text-purple-700 text-sm"
               >
-                Create your first invoice →
+                {t('createFirstInvoice')} →
               </button>
             </div>
           ) : (
@@ -354,12 +354,12 @@ export default function DashboardPage() {
                     </span>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p>
-                      <p className="text-xs text-gray-500">Due: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p>
+                      <p className="text-xs text-gray-500">{t('due')}: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : t('na')}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p>
-                    <p className={`text-xs font-medium ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{inv.status || 'draft'}</p>
+                    <p className={`text-xs font-medium ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{t(inv.status || 'draft')}</p>
                   </div>
                 </div>
               ))}

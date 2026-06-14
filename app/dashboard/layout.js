@@ -1,6 +1,6 @@
 'use client';
 
-import GlassSidebar from '@/components/GlassSidebar';
+import Sidebar from '@/components/Sidebar';
 import MobileMenu from '@/components/MobileMenu';
 import AIAssistant from '@/components/AIAssistant';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -10,7 +10,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {!isMobile && <GlassSidebar />}
+      {!isMobile && <Sidebar />}
       <main className={!isMobile ? 'lg:ml-72' : 'pb-20'}>
         {children}
       </main>

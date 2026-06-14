@@ -1,8 +1,10 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
+import { t } from '@/lib/i18n';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -133,24 +135,39 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-center">{t('loading')}...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">{t('loading')}...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('dashboard')}</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">{t('welcomeBack')}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          {t('dashboard')}
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">
+          {t('welcomeBack')}
+        </p>
       </div>
 
       {/* Period Selector */}
       <div className="flex gap-2 mb-6">
-        {['week', 'month', 'year'].map(period => (
+        {['week', 'month', 'year'].map((period) => (
           <button
             key={period}
             onClick={() => setSelectedPeriod(period)}
-            className={`px-4 py-2 rounded-lg font-medium capitalize ${selectedPeriod === period ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 border'}`}
+            className={`px-4 py-2 rounded-lg font-medium capitalize transition-all ${
+              selectedPeriod === period
+                ? 'bg-purple-600 text-white shadow-lg'
+                : 'bg-white dark:bg-gray-800 border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
           >
             {t(period)}
           </button>
@@ -159,81 +176,121 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/invoices', 'paid')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('revenue')}</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRevenue.toLocaleString()}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('revenue')}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                ${stats.totalRevenue.toLocaleString()}
+              </p>
             </div>
             <div className="text-2xl">💰</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/reports')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/reports')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('netProfit')}</p>
-              <p className="text-xl font-bold text-green-600 dark:text-green-400">${stats.netProfit.toLocaleString()}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('netProfit')}</p>
+              <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+                ${stats.netProfit.toLocaleString()}
+              </p>
             </div>
             <div className="text-2xl">📈</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/invoices', 'pending')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/invoices', 'pending')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('pending')}</p>
-              <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">${stats.pendingAmount.toLocaleString()}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('pending')}</p>
+              <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
+                ${stats.pendingAmount.toLocaleString()}
+              </p>
             </div>
             <div className="text-2xl">⏳</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/invoices')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/invoices')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('totalInvoices')}</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalInvoices}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('totalInvoices')}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                {stats.totalInvoices}
+              </p>
             </div>
             <div className="text-2xl">📄</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/invoices', 'paid')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/invoices', 'paid')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('paid')}</p>
-              <p className="text-xl font-bold text-green-600">{stats.paidInvoices}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('paid')}</p>
+              <p className="text-xl font-bold text-green-600 mt-1">
+                {stats.paidInvoices}
+              </p>
             </div>
             <div className="text-2xl">✅</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/clients')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/clients')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('clients')}</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalClients}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('clients')}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                {stats.totalClients}
+              </p>
             </div>
             <div className="text-2xl">👥</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/invoices', 'overdue')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/invoices', 'overdue')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('overdue')}</p>
-              <p className="text-xl font-bold text-red-600">{stats.overdueInvoices}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('overdue')}</p>
+              <p className="text-xl font-bold text-red-600 mt-1">
+                {stats.overdueInvoices}
+              </p>
             </div>
             <div className="text-2xl">⚠️</div>
           </div>
         </div>
         
-        <div onClick={() => navigateTo('/dashboard/expenses')} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4 cursor-pointer hover:shadow-lg">
-          <div className="flex justify-between">
+        <div
+          onClick={() => navigateTo('/dashboard/expenses')}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 text-xs">{t('expenses')}</p>
-              <p className="text-xl font-bold text-red-600">${stats.totalExpenses.toLocaleString()}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wide">{t('expenses')}</p>
+              <p className="text-xl font-bold text-red-600 mt-1">
+                ${stats.totalExpenses.toLocaleString()}
+              </p>
             </div>
             <div className="text-2xl">💰</div>
           </div>
@@ -242,8 +299,10 @@ export default function DashboardPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-          <h2 className="font-bold mb-3">{t('revenueTrend')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4">
+          <h2 className="font-bold text-gray-900 dark:text-white mb-4">
+            {t('revenueTrend')}
+          </h2>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -255,49 +314,92 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-          <h2 className="font-bold mb-3">{t('invoiceStatus')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4">
+          <h2 className="font-bold text-gray-900 dark:text-white mb-4">
+            {t('invoiceStatus')}
+          </h2>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
+              <Pie
+                data={statusData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                dataKey="value"
+                label
+              >
                 {statusData.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} style={{ cursor: 'pointer' }} onClick={() => navigateTo(entry.link)} />
+                  <Cell
+                    key={index}
+                    fill={entry.color}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigateTo(entry.link)}
+                  />
                 ))}
               </Pie>
               <Tooltip />
-              <Legend onClick={(e) => {
-                const item = statusData.find(d => d.name === e.value);
-                if (item) navigateTo(item.link);
-              }} />
+              <Legend
+                onClick={(e) => {
+                  const item = statusData.find((d) => d.name === e.value);
+                  if (item) navigateTo(item.link);
+                }}
+                formatter={(value) => <span className="cursor-pointer">{value}</span>}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Recent Invoices */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="font-bold">{t('recentInvoices')}</h2>
-          <button onClick={() => navigateTo('/dashboard/invoices')} className="text-purple-600 text-sm">{t('viewAll')} →</button>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-bold text-gray-900 dark:text-white">
+            {t('recentInvoices')}
+          </h2>
+          <button
+            onClick={() => navigateTo('/dashboard/invoices')}
+            className="text-purple-600 text-sm hover:text-purple-700 transition-colors"
+          >
+            {t('viewAll')} →
+          </button>
         </div>
         <div className="space-y-2">
-          {recentInvoices.map((inv, idx) => (
-            <div key={idx} onClick={() => navigateTo(`/dashboard/invoices/${inv.id}`)} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer">
-              <div className="flex items-center gap-3">
-                <span className={`text-2xl ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
-                  {inv.status === 'paid' ? '✅' : '📄'}
-                </span>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{inv.invoice_number}</p>
-                  <p className="text-xs text-gray-500">{t('due')}: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : t('na')}</p>
+          {recentInvoices.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>📭 {t('noInvoices')}</p>
+            </div>
+          ) : (
+            recentInvoices.map((inv, idx) => (
+              <div
+                key={idx}
+                onClick={() => navigateTo(`/dashboard/invoices/${inv.id}`)}
+                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`text-2xl ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
+                    {inv.status === 'paid' ? '✅' : '📄'}
+                  </span>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {inv.invoice_number}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {t('due')}: {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : t('na')}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-gray-900 dark:text-white">
+                    {inv.currency || 'USD'} {inv.total?.toFixed(2)}
+                  </p>
+                  <p className={`text-xs ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
+                    {t(inv.status || 'draft')}
+                  </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-gray-900 dark:text-white">{inv.currency || 'USD'} {inv.total?.toFixed(2)}</p>
-                <p className={`text-xs ${inv.status === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>{t(inv.status || 'draft')}</p>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

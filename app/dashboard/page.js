@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { t } from '@/lib/i18n';
 import { Tooltip, TooltipProvider } from '@/components/Tooltip';
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -135,55 +133,14 @@ export default function DashboardPage() {
     loadAllData();
   }, [loadAllData]);
 
-  // Loading Skeletons
+  // Loading Spinner
   if (loading) {
     return (
       <TooltipProvider>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
-          <div className="mb-8">
-            <Skeleton height={40} width={200} className="mb-2" />
-            <Skeleton height={20} width={300} />
-          </div>
-          <div className="flex gap-2 mb-6">
-            <Skeleton height={40} width={80} />
-            <Skeleton height={40} width={80} />
-            <Skeleton height={40} width={80} />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-                <Skeleton height={15} width={60} className="mb-2" />
-                <Skeleton height={30} width={100} />
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-              <Skeleton height={20} width={150} className="mb-4" />
-              <Skeleton height={250} />
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-              <Skeleton height={20} width={150} className="mb-4" />
-              <Skeleton height={250} />
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow border p-4">
-            <div className="flex justify-between mb-3">
-              <Skeleton height={20} width={150} />
-              <Skeleton height={16} width={80} />
-            </div>
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex justify-between items-center p-3 border-b border-gray-100 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <Skeleton circle width={40} height={40} />
-                  <div>
-                    <Skeleton height={16} width={120} />
-                    <Skeleton height={12} width={80} className="mt-1" />
-                  </div>
-                </div>
-                <Skeleton height={20} width={100} />
-              </div>
-            ))}
+        <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading your dashboard...</p>
           </div>
         </div>
       </TooltipProvider>
